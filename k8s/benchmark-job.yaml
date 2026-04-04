@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gpu-benchmark
+  labels:
+    app: gpu-benchmark
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: gpu-benchmark
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: benchmark
+          image: gpu-benchmark:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "8Gi"
+              cpu: "4"
+          env:
+            - name: BENCHMARK_CONFIG
+              value: /app/config/benchmark_config.yaml
+            - name: BENCHMARK_RESULTS_DIR
+              value: /app/results
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+          volumeMounts:
+            - name: results
+              mountPath: /app/results
+            - name: config
+              mountPath: /app/config/benchmark_config.yaml
+              subPath: benchmark_config.yaml
+      volumes:
+        - name: results
+          persistentVolumeClaim:
+            claimName: benchmark-results-pvc
+        - name: config
+          configMap:
+            name: benchmark-config
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: benchmark-results-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benchmark-config
+data:
+  benchmark_config.yaml: |
+    workloads:
+      - resnet50
+      - bert_base
+    batch_sizes:
+      - 1
+      - 8
+      - 32
+      - 64
+    num_repeats: 3
+    warmup_iters: 10
+    benchmark_iters: 100
+    seed: 42
+    modes:
+      - inference
+      - training
+    output_dir: results/
+    prometheus_pushgateway: "http://pushgateway:9091"

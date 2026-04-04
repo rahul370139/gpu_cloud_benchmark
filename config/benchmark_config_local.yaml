@@ -1,0 +1,20 @@
+# Minimal config for local CPU validation (not a real benchmark)
+workloads:
+  - resnet50
+
+batch_sizes:
+  - 1
+  - 4
+
+num_repeats: 2
+warmup_iters: 2
+benchmark_iters: 5
+
+seed: 42
+
+modes:
+  - inference
+
+output_dir: results/
+
+prometheus_pushgateway: ""

@@ -1,0 +1,3 @@
+gpu_type,workload,batch_size,mean_throughput,cost_per_hour,gpu_memory_gb,throughput_per_dollar,cost_per_1k_samples,cost_efficiency_rank
+CPU,resnet50,1,35.519999999999996,0.0,0,0.0,0.0,1
+CPU,resnet50,4,46.849999999999994,0.0,0,0.0,0.0,1

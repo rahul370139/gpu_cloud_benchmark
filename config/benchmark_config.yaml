@@ -1,0 +1,23 @@
+workloads:
+  - resnet50
+  - bert_base
+
+batch_sizes:
+  - 1
+  - 8
+  - 32
+  - 64
+
+num_repeats: 3
+warmup_iters: 10
+benchmark_iters: 100
+
+seed: 42
+
+modes:
+  - inference
+  - training
+
+output_dir: results/
+
+prometheus_pushgateway: ""

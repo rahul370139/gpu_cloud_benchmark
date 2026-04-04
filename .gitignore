@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+venv/
+.venv/
+
+# Benchmark outputs (regenerate locally; optional: remove these lines to commit sample results)
+# results/
+# results_dgx2/
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

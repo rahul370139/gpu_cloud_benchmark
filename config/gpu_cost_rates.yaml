@@ -1,0 +1,37 @@
+# AWS EC2 on-demand GPU instance hourly rates (USD, us-east-1, as of 2024-08)
+# Format: gpu_model -> {instance_type, cost_per_hour, gpu_memory_gb}
+
+gpu_rates:
+  T4:
+    instance_type: g4dn.xlarge
+    cost_per_hour: 0.526
+    gpu_memory_gb: 16
+
+  V100:
+    instance_type: p3.2xlarge
+    cost_per_hour: 3.06
+    gpu_memory_gb: 16
+
+  A10G:
+    instance_type: g5.xlarge
+    cost_per_hour: 1.006
+    gpu_memory_gb: 24
+
+  A100:
+    instance_type: p4d.24xlarge
+    cost_per_hour: 32.77
+    gpu_memory_gb: 40
+    note: "Price is for full 8-GPU instance; per-GPU = 4.10"
+    cost_per_gpu_hour: 4.10
+
+  H100:
+    instance_type: p5.48xlarge
+    cost_per_hour: 98.32
+    gpu_memory_gb: 80
+    note: "Price is for full 8-GPU instance; per-GPU = 12.29"
+    cost_per_gpu_hour: 12.29
+
+  L4:
+    instance_type: g6.xlarge
+    cost_per_hour: 0.8048
+    gpu_memory_gb: 24
