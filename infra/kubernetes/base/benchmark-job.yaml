@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: benchmark-run
+  namespace: ml-benchmark
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: benchmark
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark
+          image: ghcr.io/example/ml-benchmark:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+          env:
+            - name: BENCHMARK_OUTPUT_DIR
+              value: /artifacts
+            - name: BENCHMARK_REPEAT
+              value: "3"
+          volumeMounts:
+            - name: artifacts
+              mountPath: /artifacts
+      volumes:
+        - name: artifacts
+          emptyDir: {}

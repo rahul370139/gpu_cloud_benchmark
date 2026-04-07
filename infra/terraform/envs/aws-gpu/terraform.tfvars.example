@@ -1,0 +1,21 @@
+public_subnet_cidrs = ["10.42.1.0/24", "10.42.2.0/24"]
+availability_zones  = ["us-east-1a", "us-east-1b"]
+admin_cidrs         = ["0.0.0.0/0"]
+
+ami_id               = "ami-xxxxxxxxxxxxxxxxx"
+key_name             = "your-ec2-keypair"
+cluster_token        = "replace-me-with-a-long-random-string"
+artifact_bucket_name = "replace-me-with-a-unique-bucket-name"
+
+controller_instance_type = "g4dn.xlarge"
+worker_instance_type     = "g4dn.xlarge"
+controller_hourly_rate   = 0.526
+worker_hourly_rate       = 0.526
+worker_count             = 1
+
+benchmark_run_id = "run-001"
+
+tags = {
+  Course = "MSML605"
+  Team   = "Sahil-Rahul"
+}
