@@ -257,6 +257,17 @@ def run_full_benchmark(config_path: str, device: str | None = None) -> Path:
         json.dump(manifest, f, indent=2, default=str)
     logger.info("Run manifest written to %s", manifest_path)
 
+    # Auto-log to history database for the recommendation engine
+    try:
+        from .recommender.history import HistoryStore
+        db_path = Path(config.get("history_db", "data/benchmark_history.db"))
+        store = HistoryStore(db_path)
+        store.log_benchmark_results(all_results, gpu_type)
+        store.close()
+        logger.info("Results logged to history database: %s", db_path)
+    except Exception as e:
+        logger.debug("History logging skipped: %s", e)
+
     return output_dir
 
 
@@ -264,10 +275,23 @@ def main():
     parser = argparse.ArgumentParser(description="GPU Cloud Benchmark Runner")
     parser.add_argument("--config", type=str, default="config/benchmark_config.yaml")
     parser.add_argument("--device", type=str, default=None, help="Force device (cuda/cpu)")
+    parser.add_argument(
+        "--recommend", action="store_true",
+        help="Run recommendation engine after benchmark completes",
+    )
     args = parser.parse_args()
 
     output_dir = run_full_benchmark(args.config, args.device)
     logger.info("Benchmark complete. Results in %s", output_dir)
+
+    if args.recommend:
+        try:
+            from .recommender.engine import RecommendationEngine, format_recommendation
+            engine = RecommendationEngine()
+            result = engine.recommend(results_dir=output_dir)
+            print(format_recommendation(result))
+        except Exception as e:
+            logger.error("Recommendation failed: %s", e)
 
 
 if __name__ == "__main__":

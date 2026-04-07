@@ -35,8 +35,14 @@ if [ -n "${DEVICE}" ]; then
 fi
 python -m src.runner --config "${CONFIG}" ${DEVICE_ARG}
 
-echo "[4/4] Generating report..."
+echo "[4/5] Generating report..."
 python /app/scripts/generate_report.py --results-dir "${RESULTS_DIR}" --output "${RESULTS_DIR}/report.html"
+
+echo "[5/5] Running GPU recommendation engine..."
+python -m src.recommender recommend \
+    --results-dir "${RESULTS_DIR}" \
+    -o "${RESULTS_DIR}/recommendation.json" \
+    2>&1 || echo "       (Recommendation skipped — single-GPU run)"
 
 echo "=========================================="
 echo " Benchmark complete."

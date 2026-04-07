@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# GPU Recommendation Engine Configuration
+# ---------------------------------------------------------------------------
+
+scoring:
+  weights:
+    throughput: 0.40
+    cost_efficiency: 0.35
+    latency: 0.25
+
+  # "maximize_throughput" — favour raw speed
+  # "minimize_cost"       — favour cheapest acceptable option
+  # "balanced"            — default weighted composite
+  optimization_goal: balanced
+
+partial_benchmark:
+  max_iterations: 30
+  warmup_iterations: 5
+  convergence_window: 8
+  convergence_cv_threshold: 0.05
+  time_budget_seconds: 300
+  # Which configs to profile (subset of full matrix)
+  batch_sizes: [1, 32]
+  modes: [inference]
+
+history:
+  database_path: data/benchmark_history.db
+  auto_log: true
+
+predictor:
+  k_neighbors: 3
+  min_history_entries: 5
+  feature_weights:
+    param_count: 0.30
+    batch_size: 0.25
+    memory_footprint: 0.25
+    is_training: 0.20
+
+constraints:
+  defaults:
+    max_cost_per_hour: null
+    max_latency_p95_ms: null
+    min_throughput: null
+    max_gpu_memory_gb: null

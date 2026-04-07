@@ -1,0 +1,363 @@
+{
+  "status": "ok",
+  "source": "benchmark",
+  "recommended_gpu": "NVIDIA_GB10",
+  "composite_score": 0.9997,
+  "reasoning": "Highest composite score across all feasible GPUs",
+  "detail_lines": [
+    "Highest composite score across all feasible GPUs",
+    "P95 latency: 10.9 ms"
+  ],
+  "constraints_applied": "none",
+  "rankings": [
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.9997,
+      "rank": 1,
+      "throughput": 51557.19,
+      "throughput_score": 1.0,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 10.9392,
+      "latency_score": 0.9988,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Highest composite score across all feasible GPUs",
+      "detail_lines": [
+        "Highest composite score across all feasible GPUs",
+        "P95 latency: 10.9 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.9606,
+      "rank": 2,
+      "throughput": 47637.13,
+      "throughput_score": 0.9239,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 89.3147,
+      "latency_score": 0.9642,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #2 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #2 of 16 GPUs",
+        "P95 latency: 89.3 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.922,
+      "rank": 3,
+      "throughput": 46463.6,
+      "throughput_score": 0.9011,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 356.8146,
+      "latency_score": 0.8461,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #3 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #3 of 16 GPUs",
+        "P95 latency: 356.8 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.8839,
+      "rank": 4,
+      "throughput": 46540.17,
+      "throughput_score": 0.9026,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 707.2606,
+      "latency_score": 0.6913,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #4 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #4 of 16 GPUs",
+        "P95 latency: 707.3 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.6648,
+      "rank": 5,
+      "throughput": 12854.66,
+      "throughput_score": 0.2487,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 322.1096,
+      "latency_score": 0.8614,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #5 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #5 of 16 GPUs",
+        "P95 latency: 322.1 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.643,
+      "rank": 6,
+      "throughput": 6644.43,
+      "throughput_score": 0.1282,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 83.6903,
+      "latency_score": 0.9667,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #6 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #6 of 16 GPUs",
+        "P95 latency: 83.7 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.6023,
+      "rank": 7,
+      "throughput": 474.36,
+      "throughput_score": 0.0084,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 17.9935,
+      "latency_score": 0.9957,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #7 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #7 of 16 GPUs",
+        "P95 latency: 18.0 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.6009,
+      "rank": 8,
+      "throughput": 159.85,
+      "throughput_score": 0.0023,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 8.3312,
+      "latency_score": 1.0,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #8 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #8 of 16 GPUs",
+        "P95 latency: 8.3 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.5978,
+      "rank": 9,
+      "throughput": 40.42,
+      "throughput_score": 0.0,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 28.3303,
+      "latency_score": 0.9912,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #9 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #9 of 16 GPUs",
+        "P95 latency: 28.3 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.597,
+      "rank": 10,
+      "throughput": 496.32,
+      "throughput_score": 0.0088,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 67.1587,
+      "latency_score": 0.974,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #10 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #10 of 16 GPUs",
+        "P95 latency: 67.2 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.5919,
+      "rank": 11,
+      "throughput": 96.62,
+      "throughput_score": 0.0011,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 85.9104,
+      "latency_score": 0.9657,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #11 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #11 of 16 GPUs",
+        "P95 latency: 85.9 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.589,
+      "rank": 12,
+      "throughput": 473.8,
+      "throughput_score": 0.0084,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 138.3284,
+      "latency_score": 0.9426,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #12 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #12 of 16 GPUs",
+        "P95 latency: 138.3 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.5848,
+      "rank": 13,
+      "throughput": 14305.73,
+      "throughput_score": 0.2769,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 1149.1645,
+      "latency_score": 0.4961,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #13 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #13 of 16 GPUs",
+        "P95 latency: 1149.2 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.573,
+      "rank": 14,
+      "throughput": 125.53,
+      "throughput_score": 0.0017,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 258.5898,
+      "latency_score": 0.8895,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #14 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #14 of 16 GPUs",
+        "P95 latency: 258.6 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.5467,
+      "rank": 15,
+      "throughput": 129.66,
+      "throughput_score": 0.0017,
+      "throughput_unit": "images/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 496.9736,
+      "latency_score": 0.7841,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #15 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #15 of 16 GPUs",
+        "P95 latency: 497.0 ms"
+      ]
+    },
+    {
+      "gpu_type": "NVIDIA_GB10",
+      "composite_score": 0.462,
+      "rank": 16,
+      "throughput": 14458.83,
+      "throughput_score": 0.2799,
+      "throughput_unit": "tokens/sec",
+      "cost_per_hour": 0.0,
+      "throughput_per_dollar": 0.0,
+      "cost_score": 1.0,
+      "latency_p95_ms": 2272.1251,
+      "latency_score": 0.0,
+      "avg_gpu_util_pct": 0.0,
+      "avg_gpu_mem_mb": 0.0,
+      "confidence_note": "full benchmark run",
+      "reasoning": "Ranked #16 of 16 GPUs",
+      "detail_lines": [
+        "Ranked #16 of 16 GPUs",
+        "P95 latency: 2272.1 ms"
+      ]
+    }
+  ],
+  "excluded": [],
+  "history_stats": {
+    "total_runs": 48,
+    "gpus_benchmarked": 1,
+    "workloads_benchmarked": 2,
+    "distinct_gpus": [
+      "NVIDIA_GB10"
+    ],
+    "distinct_workloads": [
+      "bert_base",
+      "resnet50"
+    ]
+  }
+}
