@@ -1,31 +1,75 @@
+# Benchmark Job template. One Job is rendered per GPU class by
+# infra/scripts/run_benchmark_job.sh. Placeholders (enclosed in ${...}) are
+# substituted by envsubst before `kubectl apply`.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: benchmark-run
+  name: benchmark-run-${GPU_CLASS_LOWER}
   namespace: ml-benchmark
+  labels:
+    app: benchmark
+    gpu-class: ${GPU_CLASS}
+    benchmark-run: "${BENCHMARK_RUN_ID}"
 spec:
   backoffLimit: 1
+  ttlSecondsAfterFinished: 3600
   template:
     metadata:
       labels:
         app: benchmark
+        gpu-class: ${GPU_CLASS}
     spec:
       restartPolicy: Never
+      runtimeClassName: nvidia
+      imagePullSecrets:
+        - name: benchmark-registry-credentials
+      # Pin this Job to nodes in the matching GPU pool. Terraform labels each
+      # worker node with gpu-benchmark/gpu-class=<class> via cloud-init.
+      nodeSelector:
+        gpu-benchmark/gpu-class: ${GPU_CLASS}
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       containers:
         - name: benchmark
-          image: ghcr.io/example/ml-benchmark:latest
+          image: ${BENCHMARK_IMAGE}
           imagePullPolicy: IfNotPresent
           resources:
             limits:
               nvidia.com/gpu: 1
+            requests:
+              nvidia.com/gpu: 1
+              memory: "6Gi"
+              cpu: "2"
           env:
-            - name: BENCHMARK_OUTPUT_DIR
-              value: /artifacts
-            - name: BENCHMARK_REPEAT
-              value: "3"
+            - name: BENCHMARK_CONFIG
+              value: /app/config/benchmark_config.yaml
+            - name: BENCHMARK_RESULTS_DIR
+              value: /artifacts/${GPU_CLASS}
+            - name: BENCHMARK_RUN_ID
+              value: ${BENCHMARK_RUN_ID}
+            - name: BENCHMARK_GPU_CLASS
+              value: ${GPU_CLASS}
+            - name: BENCHMARK_ARTIFACT_BUCKET
+              value: ${ARTIFACT_BUCKET_NAME}
+            - name: AWS_REGION
+              value: ${AWS_REGION}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
           volumeMounts:
             - name: artifacts
               mountPath: /artifacts
+            - name: config
+              mountPath: /app/config/benchmark_config.yaml
+              subPath: benchmark_config.yaml
       volumes:
         - name: artifacts
           emptyDir: {}
+        - name: config
+          configMap:
+            name: benchmark-config

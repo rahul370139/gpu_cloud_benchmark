@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import logging
+import os
 import sys
 import time
 from dataclasses import asdict
@@ -13,7 +14,7 @@ import numpy as np
 import torch
 import yaml
 
-from .workloads import get_workload
+from .workloads import get_workload, register_custom_workloads
 from .metrics.timer import CudaTimer
 from .metrics.gpu_collector import GpuCollector
 from .metrics.prometheus_exporter import init_prometheus, push_benchmark_metrics
@@ -130,13 +131,54 @@ def run_single_benchmark(
     return result, latencies, gpu_snapshots
 
 
-def run_full_benchmark(config_path: str, device: str | None = None) -> Path:
+def _normalise_workload_config(raw_workloads) -> list[str]:
+    names: list[str] = []
+    for entry in raw_workloads:
+        if isinstance(entry, str):
+            names.append(entry)
+            continue
+        if isinstance(entry, dict):
+            name = entry.get("name")
+            target = entry.get("target")
+            if not name or not target:
+                raise ValueError(
+                    "Custom workload entries must include both 'name' and 'target'"
+                )
+            register_custom_workloads({name: target})
+            names.append(name)
+            continue
+        raise TypeError(f"Unsupported workload config entry: {entry!r}")
+    return names
+
+
+def _register_cli_workload_target(
+    workload_target: str | None,
+    workload_name: str | None,
+    config: dict,
+) -> None:
+    if not workload_target:
+        return
+    alias = workload_name or workload_target.rsplit(":", 1)[-1]
+    custom = dict(config.get("custom_workloads") or {})
+    custom[alias] = workload_target
+    config["custom_workloads"] = custom
+    config["workloads"] = [alias]
+
+
+def run_full_benchmark(
+    config_path: str,
+    device: str | None = None,
+    workload_target: str | None = None,
+    workload_name: str | None = None,
+) -> Path:
     """Execute the complete benchmark suite defined in a config YAML."""
 
     with open(config_path) as f:
         config = yaml.safe_load(f)
 
-    output_dir = Path(config.get("output_dir", "results"))
+    _register_cli_workload_target(workload_target, workload_name, config)
+
+    output_dir = Path(os.environ.get("BENCHMARK_RESULTS_DIR", config.get("output_dir", "results")))
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "figures").mkdir(exist_ok=True)
 
@@ -152,7 +194,8 @@ def run_full_benchmark(config_path: str, device: str | None = None) -> Path:
     env_info = capture_environment()
     seed_base = config.get("seed", 42)
 
-    workloads = config.get("workloads", ["resnet50"])
+    register_custom_workloads(config.get("custom_workloads"))
+    workloads = _normalise_workload_config(config.get("workloads", ["resnet50"]))
     batch_sizes = config.get("batch_sizes", [1, 8, 32])
     num_repeats = config.get("num_repeats", 3)
     warmup_iters = config.get("warmup_iters", 10)
@@ -246,6 +289,7 @@ def run_full_benchmark(config_path: str, device: str | None = None) -> Path:
         "gpu_type": gpu_type,
         "device": device,
         "config": config,
+        "custom_workloads": config.get("custom_workloads", {}),
         "environment": env_info,
         "total_runs": len(all_results),
         "successful_runs": sum(1 for r in all_results if "error" not in r),
@@ -276,12 +320,29 @@ def main():
     parser.add_argument("--config", type=str, default="config/benchmark_config.yaml")
     parser.add_argument("--device", type=str, default=None, help="Force device (cuda/cpu)")
     parser.add_argument(
+        "--workload-target",
+        type=str,
+        default=None,
+        help="Benchmark a custom workload class via import path: module.path:ClassName",
+    )
+    parser.add_argument(
+        "--workload-name",
+        type=str,
+        default=None,
+        help="Optional alias to use with --workload-target; defaults to the class name",
+    )
+    parser.add_argument(
         "--recommend", action="store_true",
         help="Run recommendation engine after benchmark completes",
     )
     args = parser.parse_args()
 
-    output_dir = run_full_benchmark(args.config, args.device)
+    output_dir = run_full_benchmark(
+        args.config,
+        args.device,
+        workload_target=args.workload_target,
+        workload_name=args.workload_name,
+    )
     logger.info("Benchmark complete. Results in %s", output_dir)
 
     if args.recommend:

@@ -1,0 +1,11 @@
+boto3==1.39.4
+transformers==4.44.0
+pynvml==11.5.0
+prometheus-client==0.21.0
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.9.1
+seaborn==0.13.2
+jinja2==3.1.4
+pyyaml==6.0.1
+weasyprint==62.3

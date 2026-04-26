@@ -13,11 +13,11 @@ echo " Device : ${DEVICE:-auto}"
 echo " Results: ${RESULTS_DIR}"
 echo "=========================================="
 
-echo "[1/4] Running preflight checks..."
+echo "[1/5] Running preflight checks..."
 python /app/scripts/preflight_check.py
 echo "       Preflight OK."
 
-echo "[2/4] Capturing environment..."
+echo "[2/5] Capturing environment..."
 python -c "
 from src.reproducibility.env_capture import capture_environment
 import json, pathlib
@@ -28,21 +28,24 @@ out.write_text(json.dumps(env, indent=2))
 print(f'       Environment snapshot -> {out}')
 "
 
-echo "[3/4] Running benchmarks..."
+echo "[3/5] Running benchmarks..."
 DEVICE_ARG=""
 if [ -n "${DEVICE}" ]; then
     DEVICE_ARG="--device ${DEVICE}"
 fi
-python -m src.runner --config "${CONFIG}" ${DEVICE_ARG}
+BENCHMARK_RESULTS_DIR="${RESULTS_DIR}" python -m src.runner --config "${CONFIG}" ${DEVICE_ARG}
 
 echo "[4/5] Generating report..."
 python /app/scripts/generate_report.py --results-dir "${RESULTS_DIR}" --output "${RESULTS_DIR}/report.html"
 
-echo "[5/5] Running GPU recommendation engine..."
+echo "[5/6] Running GPU recommendation engine..."
 python -m src.recommender recommend \
     --results-dir "${RESULTS_DIR}" \
     -o "${RESULTS_DIR}/recommendation.json" \
     2>&1 || echo "       (Recommendation skipped — single-GPU run)"
+
+echo "[6/6] Uploading artifacts to S3..."
+python -m src.artifacts.s3_uploader --results-dir "${RESULTS_DIR}"
 
 echo "=========================================="
 echo " Benchmark complete."

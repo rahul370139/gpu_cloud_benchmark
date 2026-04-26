@@ -5,12 +5,13 @@ packages:
   - jq
 
 runcmd:
-  - curl -fsSL https://get.docker.com | sh
-  - curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-  - curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-  - apt-get update
-  - apt-get install -y nvidia-driver-550 nvidia-container-toolkit
-  - nvidia-ctk runtime configure --runtime=docker
-  - systemctl restart docker
-  - curl -sfL https://get.k3s.io | K3S_URL='https://${controller_private_ip}:6443' K3S_TOKEN='${cluster_token}' INSTALL_K3S_EXEC='agent --node-label role=worker --node-label accelerator=nvidia' sh -
+  - |
+      if ! command -v nvidia-container-runtime >/dev/null 2>&1; then
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+        apt-get update
+        apt-get install -y nvidia-container-toolkit nvidia-container-runtime
+      fi
+  - curl -sfL https://get.k3s.io | K3S_URL='https://${controller_private_ip}:6443' K3S_TOKEN='${cluster_token}' INSTALL_K3S_EXEC='agent --node-label role=worker --node-label accelerator=nvidia --node-label gpu-benchmark/gpu-class=${gpu_class}' sh -
   - echo '${region}' > /etc/benchmark-region
+  - echo '${gpu_class}' > /etc/benchmark-gpu-class

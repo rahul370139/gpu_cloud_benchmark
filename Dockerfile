@@ -5,12 +5,13 @@ LABEL description="GPU Cloud Benchmark — reproducible ML workload benchmarking
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-runtime.txt .
+RUN pip install --no-cache-dir -r requirements-runtime.txt
 
 COPY src/ src/
 COPY config/ config/
 COPY scripts/ scripts/
+COPY user_workloads/ user_workloads/
 RUN chmod +x scripts/entrypoint.sh
 
 RUN mkdir -p results/figures

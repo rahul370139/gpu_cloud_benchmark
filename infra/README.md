@@ -26,9 +26,10 @@ This repository contains the infrastructure and orchestration scaffold for Sahil
 ./scripts/run_pipeline.sh provision
 ```
 
-4. Configure `kubectl` access and deploy cluster add-ons:
+4. Configure `kubectl` access and deploy shared cluster resources:
 
 ```bash
+export SSH_KEY_PATH=/absolute/path/to/mac-new.pem
 ./scripts/run_pipeline.sh bootstrap
 ./scripts/run_pipeline.sh deploy
 ```
@@ -55,5 +56,7 @@ This repository contains the infrastructure and orchestration scaffold for Sahil
 ## Notes
 
 - The Terraform stack defaults to `k3s` for a lighter-weight Kubernetes control plane.
-- GPU driver installation is handled in `cloud-init` during instance bootstrap.
+- The controller uses the Ubuntu AMI you pin in Terraform, while GPU workers default to AWS's latest official Ubuntu 22.04 GPU DLAMI via a public SSM parameter. You can still override `worker_ami_id` manually if needed.
 - Cost logging uses AWS pricing metadata supplied through Terraform variables so the project can compute performance-per-dollar consistently even if live pricing APIs are unavailable.
+- Benchmark Jobs use per-pod ephemeral storage for artifacts, so the fastest reliable validation path is to inspect logs and generate reports inside the container or upload results to S3 as a follow-up step.
+- If SSH access fails during `bootstrap`, set `SSH_KEY_PATH` to the private key file that matches the EC2 key pair configured in Terraform.

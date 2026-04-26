@@ -7,7 +7,7 @@ output "controller_private_ip" {
 }
 
 output "worker_public_ips" {
-  value = aws_instance.workers[*].public_ip
+  value = [for w in aws_instance.workers : w.public_ip]
 }
 
 output "artifact_bucket_name" {
@@ -15,5 +15,18 @@ output "artifact_bucket_name" {
 }
 
 output "instance_ids" {
-  value = concat([aws_instance.controller.id], aws_instance.workers[*].id)
+  value = concat(
+    [aws_instance.controller.id],
+    [for w in aws_instance.workers : w.id],
+  )
+}
+
+# One entry per GPU class actually provisioned, used by the K8s Job renderer
+# to target each class with a matching nodeSelector.
+output "gpu_classes" {
+  value = distinct([for w in var.worker_pools : w.gpu_class])
+}
+
+output "worker_pools" {
+  value = var.worker_pools
 }

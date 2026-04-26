@@ -1,6 +1,10 @@
 # Minimal config for local CPU validation (not a real benchmark)
+custom_workloads:
+  example_mlp: "user_workloads.example_mlp:ExampleMLPWorkload"
+
 workloads:
   - resnet50
+  - example_mlp
 
 batch_sizes:
   - 1

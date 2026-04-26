@@ -2,8 +2,12 @@
   "gpu_type": "CPU",
   "device": "cpu",
   "config": {
+    "custom_workloads": {
+      "example_mlp": "user_workloads.example_mlp:ExampleMLPWorkload",
+      "cli_custom": "user_workloads.example_mlp:ExampleMLPWorkload"
+    },
     "workloads": [
-      "resnet50"
+      "cli_custom"
     ],
     "batch_sizes": [
       1,
@@ -19,30 +23,43 @@
     "output_dir": "results/",
     "prometheus_pushgateway": ""
   },
+  "custom_workloads": {
+    "example_mlp": "user_workloads.example_mlp:ExampleMLPWorkload",
+    "cli_custom": "user_workloads.example_mlp:ExampleMLPWorkload"
+  },
   "environment": {
-    "timestamp_utc": "2026-04-02T21:55:39.302507+00:00",
-    "hostname": "Rahuls-MacBook-Pro-7.local",
-    "os": "Darwin 25.1.0",
-    "python_version": "3.10.11",
-    "torch_version": "2.7.1",
+    "timestamp_utc": "2026-04-24T20:11:08.821477+00:00",
+    "hostname": "Sahils-MacBook-Pro-2.local",
+    "os": "Darwin 24.6.0",
+    "python_version": "3.12.13",
+    "torch_version": "2.4.0",
     "cuda_version": "NO_CUDA",
     "cudnn_version": "UNAVAILABLE",
     "nvidia_driver_version": "UNAVAILABLE",
     "gpu_name": "NO_GPU",
     "gpu_count": 0,
-    "docker_container_id": "Rahuls-MacBook-Pro-7.local",
-    "pip_freeze_sha256": "cc1393fadd4d9cf73a5497b25fba6e0bf85a1ae71fea9f51c45064b7463f87de",
-    "pip_freeze": "absl-py==2.1.0\naccelerate==1.10.1\naiohappyeyeballs==2.6.1\naiohttp==3.12.13\naiosignal==1.3.2\nalembic==1.14.0\naltair==5.5.0\nannotated-types==0.7.0\nanyio==3.7.1\nappnope==0.1.4\narch==7.2.0\nargon2-cffi==23.1.0\nargon2-cffi-bindings==21.2.0\narrow==1.3.0\narticles==0.1.0\nasttokens==2.4.1\nastunparse==1.6.3\nasync-lru==2.0.4\nasync-timeout==5.0.1\nattrs==25.3.0\nAutomat==25.4.16\nbabel==2.16.0\nbeautifulsoup4==4.12.3\nbleach==6.2.0\nblinker==1.9.0\nbokeh==3.7.3\nBrotli==1.1.0\ncachetools==5.5.0\ncertifi==2025.6.15\ncffi==1.17.1\nchardet==3.0.4\ncharset-normalizer==3.4.2\nclick==8.1.7\nclip @ git+https://github.com/openai/CLIP.git@dcba3cb2e2827b402d2701e7e1c7d9fed8a20ef1\ncloudpickle==3.1.0\ncmdstanpy==1.3.0\ncoloredlogs==15.0.1\ncolorlog==6.9.0\ncomm==0.2.2\nconstantly==23.10.4\ncontourpy==1.3.1\ncryptography==44.0.2\ncssselect==1.2.0\ncssselect2==0.8.0\ncycler==0.12.1\ndash==2.18.2\ndash-core-components==2.0.0\ndash-html-components==2.0.0\ndash-table==5.0.0\ndask==2024.12.1\ndask-expr==1.1.21\ndask-glm==0.3.2\ndask-ml==2024.4.4\ndataclasses-json==0.6.7\ndatasetsforecast==1.0.0\ndebugpy==1.8.9\ndecorator==5.1.1\ndeep-translator==1.11.4\ndefusedxml==0.7.1\ndeprecation==2.1.0\ndistributed==2024.12.1\ndistro==1.9.0\ndocx==0.2.4\nduckdb==1.4.0\nentrypoints==0.4\netils==1.12.2\nexceptiongroup==1.3.0\nexchange_calendars==4.8\nexecuting==2.1.0\nfaiss-cpu==1.11.0\nfastapi==0.104.1\nfastjsonschema==2.21.1\nfeedfinder2==0.0.4\nfeedparser==6.0.11\nfilelock==3.18.0\nFlask==3.0.3\nflatbuffers==24.12.23\nfonttools==4.55.0\nfqdn==1.5.1\nfrozendict==2.4.6\nfrozenlist==1.7.0\nfsspec==2025.5.1\nftfy==6.3.1\ngast==0.6.0\ngitdb==4.0.12\nGitPython==3.1.44\ngoogle-auth==2.37.0\ngoogle-auth-oauthlib==1.0.0\ngoogle-pasta==0.2.0\ngotrue==1.3.1\ngroq==0.31.0\ngrpcio==1.69.0\nh11==0.16.0\nh2==4.2.0\nh5py==3.12.1\nhf-xet==1.1.5\nholidays==0.84\nhpack==4.1.0\nhstspreload==2025.1.1\nhtml5lib==1.1\nhttpcore==1.0.9\nhttptools==0.6.4\nhttpx==0.28.1\nhuggingface-hub==0.35.3\nhumanfriendly==10.0\nhyperframe==6.1.0\nhyperlink==21.0.0\nidna==3.10\nImageIO==2.37.2\nimportlib_metadata==8.5.0\nimportlib_resources==6.5.2\nincremental==24.7.2\niniconfig==2.1.0\nipykernel==6.29.5\nipython==8.29.0\nisodate==0.7.2\nisoduration==20.11.0\nitemadapter==0.11.0\nitemloaders==1.3.2\nitsdangerous==2.2.0\njedi==0.19.2\njieba3k==0.35.1\nJinja2==3.1.6\njiter==0.8.0\njmespath==1.0.1\njoblib==1.5.0\njson5==0.10.0\njsonpatch==1.33\njsonpath-rw==1.4.0\njsonpointer==3.0.0\njsonschema==4.23.0\njsonschema-specifications==2024.10.1\njupyter-events==0.10.0\njupyter-lsp==2.2.5\njupyter_client==7.4.9\njupyter_core==5.7.2\njupyter_server==2.14.2\njupyter_server_terminals==0.5.3\njupyterlab==4.3.2\njupyterlab_pygments==0.3.0\njupyterlab_server==2.27.3\nkeras==2.14.0\nkiwisolver==1.4.7\nkorean-lunar-calendar==0.3.1\nlangchain==0.1.14\nlangchain-community==0.0.38\nlangchain-core==0.3.74\nlangchain-groq==0.3.7\nlangchain-openai==0.3.31\nlangchain-text-splitters==0.0.2\nlanggraph==0.6.6\nlanggraph-checkpoint==2.1.1\nlanggraph-prebuilt==0.6.4\nlanggraph-sdk==0.2.3\nlangsmith==0.4.16\nlazy_loader==0.4\nlibclang==18.1.1\nllvmlite==0.43.0\nlocket==1.0.0\nlxml==5.3.0\nlxml_html_clean==0.4.1\nlz4==4.4.4\nMako==1.3.8\nMarkdown==3.7\nmarkdown-it-py==3.0.0\nMarkupSafe==3.0.2\nmarshmallow==3.26.1\nmatplotlib==3.9.2\nmatplotlib-inline==0.1.7\nmdurl==0.1.2\nmistune==3.0.2\nml_dtypes==0.5.4\nmlcroissant==1.0.17\nmpmath==1.3.0\nmsgpack==1.1.0\nmultidict==6.5.0\nmultipledispatch==1.0.0\nmultitasking==0.0.11\nmypy-extensions==1.0.0\n-e git+https://github.com/rahul370139/Fashion_Recommendation_model_demo.git@3f4825e1cde18e39245257ea2db9e3e30a852e88#egg=mywardrobe\nnamex==0.0.8\nnarwhals==1.39.0\nnbclient==0.10.1\nnbconvert==7.16.4\nnbformat==5.10.4\nnest-asyncio==1.6.0\nnetworkx==3.4.2\nnewsapi-python==0.2.7\nnewspaper3k==0.2.8\nnixtla==0.6.5\nnltk==3.9.1\nnotebook==7.3.1\nnotebook_shim==0.2.4\nnumba==0.60.0\nnumpy==1.26.4\noauthlib==3.2.2\nonnx==1.19.1\nonnxruntime==1.23.2\nopenai==1.101.0\nopenai-clip==1.0.1\nopt_einsum==3.4.0\noptree==0.13.1\noptuna==4.1.0\norjson==3.10.14\normsgpack==1.10.0\noutcome==1.3.0.post0\noverrides==7.7.0\npackaging==25.0\npandas==2.2.3\npandas-datareader==0.10.0\npandas-stubs==2.2.3.250308\npandas_market_calendars==4.6.0\npandocfilters==1.5.1\nparsel==1.10.0\nparso==0.8.4\npartd==1.4.2\npatsy==1.0.1\npdfminer.six==20221105\npdfplumber==0.10.3\npeewee==3.17.8\npeft==0.17.1\npexpect==4.9.0\npillow==11.2.1\nplatformdirs==4.3.6\nplotly==5.24.1\npluggy==1.6.0\nply==3.11\npostgrest==0.13.2\nprometheus_client==0.21.1\nprompt_toolkit==3.0.48\npropcache==0.3.2\nprophet==1.2.1\nProtego==0.4.0\nprotobuf==4.25.5\npsutil==6.1.0\nptyprocess==0.7.0\npure_eval==0.2.3\npyarrow==20.0.0\npyasn1==0.6.1\npyasn1_modules==0.4.1\npycparser==2.22\npydantic==2.11.7\npydantic_core==2.33.2\npydeck==0.9.1\nPyDispatcher==2.0.7\npydyf==0.11.0\nPygments==2.19.2\nPyJWT==2.10.1\npyluach==2.2.0\nPyMuPDF==1.23.20\nPyMuPDFb==1.23.9\npynndescent==0.5.13\npyOpenSSL==25.1.0\npyparsing==3.2.0\nPyPDF2==3.0.1\npypdfium2==4.30.1\npyphen==0.17.2\nPySocks==1.7.1\npytest==8.4.1\npytest-mock==3.14.1\npython-dateutil==2.9.0.post0\npython-dotenv==1.0.0\npython-json-logger==2.0.7\npython-multipart==0.0.6\npython-pptx==0.6.21\npytz==2024.2\nPyYAML==6.0.2\npyzmq==24.0.1\nqueuelib==1.8.0\nrdflib==7.1.4\nrealtime==1.0.6\nreferencing==0.35.1\nregex==2024.11.6\nrequests==2.32.4\nrequests-file==2.1.0\nrequests-oauthlib==2.0.0\nrequests-toolbelt==1.0.0\nretrying==1.3.4\nrfc3339-validator==0.1.4\nrfc3986==1.5.0\nrfc3986-validator==0.1.1\nrich==13.9.4\nrpds-py==0.22.3\nrsa==4.9\nsafetensors==0.5.3\nscikit-image==0.25.2\nscikit-learn==1.7.2\nscipy==1.15.3\nScrapy==2.13.2\nseaborn==0.13.2\nselenium==4.28.1\nSend2Trash==1.8.3\nsentence-transformers==2.2.2\nsentencepiece==0.2.0\nservice-identity==24.2.0\nsgmllib3k==1.0.0\nshap==0.46.0\nsix==1.17.0\nslicer==0.0.8\nsmmap==5.0.2\nsniffio==1.3.1\nsortedcontainers==2.4.0\nsoupsieve==2.6\nsparse==0.16.0\nSQLAlchemy==2.0.36\nstack-data==0.6.3\nstanio==0.5.1\nstarlette==0.27.0\nstatsmodels==0.14.4\nstorage3==0.6.1\nstreamlit==1.46.0\nStrEnum==0.4.15\nsupabase==2.0.2\nsupafunc==0.3.3\nsympy==1.14.0\ntblib==3.1.0\ntenacity==8.5.0\ntensorboard==2.14.1\ntensorboard-data-server==0.7.2\ntensorflow==2.14.0\ntensorflow-estimator==2.14.0\ntensorflow-io-gcs-filesystem==0.37.1\ntensorflow-macos==2.14.0\ntermcolor==2.5.0\nterminado==0.18.1\ntf-keras==2.14.1\nthreadpoolctl==3.6.0\ntifffile==2025.5.10\ntiktoken==0.11.0\ntimm==1.0.12\ntinycss2==1.4.0\ntinyhtml5==2.0.0\ntinysegmenter==0.3\ntldextract==5.1.3\ntokenizers==0.22.1\ntoml==0.10.2\ntomli==2.2.1\ntoolz==1.0.0\ntorch==2.7.1\ntorchvision==0.22.1\ntorchxrayvision==1.4.0\ntornado==6.4.2\ntqdm==4.67.1\ntraitlets==5.14.3\ntransformers==4.56.2\ntrio==0.28.0\ntrio-websocket==0.11.1\nTwisted==25.5.0\ntypes-python-dateutil==2.9.0.20241206\ntypes-pytz==2025.2.0.20250326\ntyping-inspect==0.9.0\ntyping-inspection==0.4.1\ntyping_extensions==4.14.0\ntzdata==2024.2\numap-learn==0.5.9.post2\nuri-template==1.3.0\nurllib3==2.5.0\nutilsforecast==0.2.10\nuvicorn==0.24.0\nuvloop==0.21.0\nw3lib==2.3.1\nwatchfiles==1.1.0\nwcwidth==0.2.13\nweasyprint==60.1\nwebcolors==24.11.1\nwebencodings==0.5.1\nwebsocket-client==1.8.0\nwebsockets==12.0\nWerkzeug==3.0.6\nwrapt==1.14.1\nwsproto==1.2.0\nxgboost==2.1.3\nxlrd==2.0.1\nXlsxWriter==3.2.2\nxxhash==3.5.0\nxyzservices==2025.4.0\nyarl==1.20.1\nyfinance==0.2.51\nzict==3.0.0\nzipp==3.21.0\nzope.interface==7.2\nzopfli==0.2.3.post1\nzstandard==0.23.0",
+    "docker_container_id": "Sahils-MacBook-Pro-2.local",
+    "pip_freeze_sha256": "eb0be6d636d52794e3ab5c50e7ef17aac1235da10f904ab59fbe8b9c73c30cf9",
+    "pip_freeze": "UNAVAILABLE",
     "nvidia_container_runtime": "NOT_SET"
   },
   "total_runs": 4,
   "successful_runs": 4,
   "failed_runs": 0,
   "result_checksums": {
-    "CPU_resnet50_inference_bs1_r1_latencies.csv": "4ba6563868341eb60f88211f3f720ab424cd0beafa15d1e18dcc66d497e5dd8a",
-    "CPU_resnet50_inference_bs1_r2_latencies.csv": "a9e53ad4b96047a7988f66ad4e0e7a2b476f8c5099d651a77cf222b97e56f76a",
-    "CPU_resnet50_inference_bs4_r1_latencies.csv": "1d2fad0a2854aa555b3b825d5c8a24aa47b1d49a1dd1a7b45609c099c7aa6957",
-    "CPU_resnet50_inference_bs4_r2_latencies.csv": "29c72452d831ba982a157d70b6c9da1290366019958ddde28d95ca0ca8420c63",
-    "benchmark_summary_CPU.csv": "d4684942ed9f91e0d346686e5cb269db72b96f4e1e4582df1a4987ba88977104"
+    "CPU_cli_custom_inference_bs1_r1_latencies.csv": "7c54fc36f8025f4a095d2855ce0dc3eb61a87e853d45453ae51d47433c41ebd3",
+    "CPU_cli_custom_inference_bs1_r2_latencies.csv": "a270d152ca3fb79f783142393e1b0aa18158e51ded6fdcc6c134347d324f33fb",
+    "CPU_cli_custom_inference_bs4_r1_latencies.csv": "6a9dfe6d56a46396feb13c9b9afb29ecfbd5d99675f336af31d75bf42a201623",
+    "CPU_cli_custom_inference_bs4_r2_latencies.csv": "ca687567d48a26a3e8c9ddd0defb9c0308e6351f13595106329050682ae04247",
+    "CPU_example_mlp_inference_bs1_r1_latencies.csv": "d858473a607c98e85dcd1074aa64a6af5a08bdf42db6bc6b7d1f1a59b33d7b5b",
+    "CPU_example_mlp_inference_bs1_r2_latencies.csv": "86c5c43c954bdb96b13fdb8376d82c20623b92418e6ff79be88af2340cfed428",
+    "CPU_example_mlp_inference_bs4_r1_latencies.csv": "3eb917e379f2c1c97e7bd7642f4b9701105b78b24f0d0b2dabded27d2829bd09",
+    "CPU_example_mlp_inference_bs4_r2_latencies.csv": "ca875a9343a5cef912ecb27c1b15335652753e09d3a08cd4c283d7cb2edd30a1",
+    "CPU_resnet50_inference_bs1_r1_latencies.csv": "bef2aaeb82be5ea68ac7d8b9603fa4e44b85c11fb1a407c94ff740d1d4d90944",
+    "CPU_resnet50_inference_bs1_r2_latencies.csv": "5c20ee6a52dbef3433fea672d5b22df4ce7c20172cb43b0c2932f8665f652316",
+    "CPU_resnet50_inference_bs4_r1_latencies.csv": "8ac7a38efaf4382f9f38d7a3dd57f2c2cb6cb26ec13daf71ae40ff4c30955968",
+    "CPU_resnet50_inference_bs4_r2_latencies.csv": "d1f394cdb78314eece8369bfd09815a1ee003999c46449f9984541628fcc1cb3",
+    "benchmark_summary_CPU.csv": "2dd014b69df3c0c3577b136998bc527d95ba9b57f26471a048727a239c8f0503",
+    "cost_comparison.csv": "77614eea4a12528f2273b56cf8b0cdf917fdcf3348617e19d16976576bc2b2f7"
   }
 }

@@ -6,6 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
 require_cmd kubectl
+ensure_k3s_tunnel
 export KUBECONFIG="${KUBECONFIG_LOCAL}"
 
 TARGET_NODE="${1:-}"

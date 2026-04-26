@@ -1,6 +1,10 @@
+# Minimal single-GPU smoke test for validating your AWS account and pipeline.
+# Copy to terraform.tfvars and replace every placeholder before use.
+
+region              = "us-east-1"
 public_subnet_cidrs = ["10.42.1.0/24", "10.42.2.0/24"]
 availability_zones  = ["us-east-1a", "us-east-1b"]
-admin_cidrs         = ["0.0.0.0/0"]
+admin_cidrs         = ["YOUR.PUBLIC.IP.ADDRESS/32"]
 
 controller_ami_id    = "ami-xxxxxxxxxxxxxxxxx"
 # Leave worker_ami_id unset to use AWS's latest official Ubuntu 22.04 GPU DLAMI.
@@ -12,8 +16,6 @@ artifact_bucket_name = "replace-me-with-a-unique-bucket-name"
 controller_instance_type = "t3.large"
 controller_hourly_rate   = 0.0832
 
-# Declare one entry per GPU class to benchmark. All pools are provisioned
-# in parallel and a Kubernetes Job is dispatched to each class concurrently.
 worker_pools = [
   {
     gpu_class     = "T4"
@@ -21,23 +23,12 @@ worker_pools = [
     hourly_rate   = 0.526
     count         = 1
   },
-  {
-    gpu_class     = "A10G"
-    instance_type = "g5.xlarge"
-    hourly_rate   = 1.006
-    count         = 1
-  },
-  {
-    gpu_class     = "L4"
-    instance_type = "g6.xlarge"
-    hourly_rate   = 0.8048
-    count         = 1
-  },
 ]
 
-benchmark_run_id = "run-001"
+benchmark_run_id = "smoke-test-001"
 
 tags = {
   Course = "MSML605"
   Team   = "Sahil-Rahul"
+  Stage  = "smoke-test"
 }

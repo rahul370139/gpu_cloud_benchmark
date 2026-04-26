@@ -30,33 +30,41 @@ variable "admin_cidrs" {
   type = list(string)
 }
 
-variable "ami_id" {
+variable "controller_ami_id" {
   type = string
+}
+
+variable "worker_ami_id" {
+  type    = string
+  default = null
 }
 
 variable "controller_instance_type" {
   type    = string
-  default = "g4dn.xlarge"
-}
-
-variable "worker_instance_type" {
-  type    = string
-  default = "g4dn.xlarge"
+  default = "t3.large"
 }
 
 variable "controller_hourly_rate" {
   type    = number
-  default = 0.526
+  default = 0.0832
 }
 
-variable "worker_hourly_rate" {
-  type    = number
-  default = 0.526
-}
-
-variable "worker_count" {
-  type    = number
-  default = 1
+variable "worker_pools" {
+  description = "List of GPU worker pools; one Kubernetes benchmark Job is run per pool."
+  type = list(object({
+    gpu_class     = string
+    instance_type = string
+    hourly_rate   = number
+    count         = number
+  }))
+  default = [
+    {
+      gpu_class     = "T4"
+      instance_type = "g4dn.xlarge"
+      hourly_rate   = 0.526
+      count         = 1
+    },
+  ]
 }
 
 variable "key_name" {

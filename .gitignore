@@ -1,24 +1,45 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.egg-info/
 .eggs/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
 venv/
 .venv/
 
-# Benchmark outputs (regenerate locally; optional: remove these lines to commit sample results)
-# results/
-# results_dgx2/
+# Benchmark outputs / generated artifacts
+results/
+infra/results/
+infra/artifacts/
 
 # History database (auto-created, machine-specific)
 data/benchmark_history.db
+
+# Terraform / local infra state
+infra/.k3s-tunnel.pid
+infra/kubeconfig.yaml
+infra/terraform/envs/aws-gpu/.terraform/
+infra/terraform/envs/aws-gpu/.terraform.lock.hcl
+infra/terraform/envs/aws-gpu/terraform.tfstate
+infra/terraform/envs/aws-gpu/terraform.tfstate.*
+infra/terraform/envs/aws-gpu/terraform.tfvars
+infra/terraform/envs/aws-gpu/inventory.json
 
 # OS / editor
 .DS_Store
 *.swp
 .idea/
 .vscode/
+
+# Local tooling
+.claude/

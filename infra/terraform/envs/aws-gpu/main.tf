@@ -10,15 +10,15 @@ terraform {
       source  = "hashicorp/local"
       version = "~> 2.0"
     }
-    template = {
-      source  = "hashicorp/template"
-      version = "~> 2.2"
-    }
   }
 }
 
 provider "aws" {
   region = var.region
+}
+
+data "aws_ssm_parameter" "worker_gpu_dlami" {
+  name = "/aws/service/deeplearning/ami/x86_64/base-oss-nvidia-driver-gpu-ubuntu-22.04/latest/ami-id"
 }
 
 locals {
@@ -54,12 +54,11 @@ module "compute" {
 
   name                     = var.name
   region                   = var.region
-  ami_id                   = var.ami_id
+  controller_ami_id        = var.controller_ami_id
+  worker_ami_id            = coalesce(var.worker_ami_id, data.aws_ssm_parameter.worker_gpu_dlami.value)
   controller_instance_type = var.controller_instance_type
-  worker_instance_type     = var.worker_instance_type
   controller_hourly_rate   = var.controller_hourly_rate
-  worker_hourly_rate       = var.worker_hourly_rate
-  worker_count             = var.worker_count
+  worker_pools             = var.worker_pools
   subnet_ids               = module.network.public_subnet_ids
   security_group_id        = module.security.security_group_id
   key_name                 = var.key_name
@@ -78,5 +77,7 @@ resource "local_file" "inventory" {
     artifact_bucket_name  = module.compute.artifact_bucket_name
     benchmark_run_id      = var.benchmark_run_id
     region                = var.region
+    gpu_classes           = module.compute.gpu_classes
+    worker_pools          = module.compute.worker_pools
   })
 }

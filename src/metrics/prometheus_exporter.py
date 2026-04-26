@@ -6,7 +6,6 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 _GATEWAY: Optional[str] = None
-_REGISTRY = None
 
 
 def init_prometheus(pushgateway_url: str) -> bool:
@@ -14,14 +13,15 @@ def init_prometheus(pushgateway_url: str) -> bool:
 
     Returns True if the client is available, False otherwise.
     """
-    global _GATEWAY, _REGISTRY
+    global _GATEWAY
     if not pushgateway_url:
         logger.info("Prometheus pushgateway URL empty — metrics push disabled")
         return False
     try:
         from prometheus_client import CollectorRegistry
+
+        _ = CollectorRegistry
         _GATEWAY = pushgateway_url.rstrip("/")
-        _REGISTRY = CollectorRegistry()
         logger.info("Prometheus exporter initialized, gateway=%s", _GATEWAY)
         return True
     except ImportError:
@@ -42,10 +42,12 @@ def push_benchmark_metrics(
     gpu_memory_used_mb: float,
 ) -> None:
     """Push a single benchmark result to the Prometheus Pushgateway."""
-    if _GATEWAY is None or _REGISTRY is None:
+    if _GATEWAY is None:
         return
     try:
-        from prometheus_client import Gauge, push_to_gateway
+        from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
+
+        registry = CollectorRegistry()
 
         labels = ["gpu_type", "workload", "batch_size"]
         label_vals = [gpu_type, workload, str(batch_size)]
@@ -60,10 +62,10 @@ def push_benchmark_metrics(
         }
 
         for metric_name, (desc, value) in gauges.items():
-            g = Gauge(metric_name, desc, labels, registry=_REGISTRY)
+            g = Gauge(metric_name, desc, labels, registry=registry)
             g.labels(*label_vals).set(value)
 
-        push_to_gateway(_GATEWAY, job=job_name, registry=_REGISTRY)
+        push_to_gateway(_GATEWAY, job=job_name, registry=registry)
         logger.info("Pushed metrics for %s/%s/bs%d to %s", gpu_type, workload, batch_size, _GATEWAY)
     except Exception as e:
         logger.warning("Failed to push to Prometheus: %s", e)

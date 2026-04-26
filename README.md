@@ -10,11 +10,18 @@ latency, utilization, cost), and produces reproducible, comparable reports.
 
 ## Quick Start
 
+### Python Version
+
+Use Python `3.11` or `3.12` for local development. The pinned `torch==2.4.0`
+dependency does not install on Python `3.13`.
+
 ### Local (CPU, for testing)
 
 ```bash
+python3.12 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-python -m src.runner --config config/benchmark_config.yaml --device cpu
+python -m src.runner --config config/benchmark_config_local.yaml --device cpu
 ```
 
 ### Docker (GPU)
@@ -24,11 +31,35 @@ docker build -t gpu-benchmark .
 docker run --gpus all -v $(pwd)/results:/app/results gpu-benchmark
 ```
 
-### Kubernetes
+If you are building on Apple Silicon and pushing to AWS for `amd64` EC2 nodes,
+publish the image with `buildx` for `linux/amd64` instead of a default local build:
 
 ```bash
-kubectl apply -f k8s/benchmark-job.yaml
+chmod +x scripts/build_push_ecr.sh
+./scripts/build_push_ecr.sh 999052221400.dkr.ecr.us-east-1.amazonaws.com/gpu-benchmark:latest
 ```
+
+### Kubernetes (multi-GPU fleet)
+
+End-to-end pipeline against AWS — provisions one pool per GPU class, runs
+a benchmark Job per class concurrently, aggregates results, and tears down:
+
+```bash
+cd infra
+./scripts/run_pipeline.sh provision     # terraform apply
+./scripts/run_pipeline.sh bootstrap     # fetch kubeconfig
+./scripts/run_pipeline.sh deploy        # install namespace/config/monitoring
+./scripts/run_pipeline.sh benchmark     # dispatch Jobs in parallel
+./scripts/run_pipeline.sh log-costs     # save EC2 metadata snapshot
+./scripts/run_pipeline.sh teardown      # terraform destroy
+```
+
+Configure the GPU fleet in `infra/terraform/envs/aws-gpu/terraform.tfvars`
+via the `worker_pools` list (one entry per GPU class). See
+`terraform.tfvars.example` and `terraform.tfvars.smoke.example`.
+
+When running on AWS, make sure the benchmark image pushed to ECR matches the
+cluster architecture. The current EC2 worker setup uses `linux/amd64`.
 
 ## Project Structure
 
@@ -43,7 +74,11 @@ gpu_cloud_benchmark/
 │   ├── reproducibility/     # Seed management, checksums, environment capture
 │   └── runner.py            # Main benchmark orchestrator
 ├── scripts/                 # Docker entrypoint, preflight checks, CLI tools
-├── k8s/                     # Kubernetes Job manifests, Prometheus/Grafana configs
+├── infra/                   # Terraform (AWS) + Kubernetes manifests + pipeline scripts
+│   ├── terraform/           # VPC, security, compute (multi-GPU worker pools)
+│   ├── kubernetes/          # Namespace, PVC/ConfigMap, benchmark Job template
+│   └── scripts/             # run_pipeline.sh (provision/deploy/benchmark/teardown)
+├── k8s/prometheus/          # Prometheus/Grafana configs
 ├── tests/                   # Unit tests (CPU-compatible)
 └── notebooks/               # Interactive analysis notebooks
 ```
@@ -87,6 +122,38 @@ Edit `config/benchmark_config.yaml` to customize:
 - Output directory and Prometheus endpoint
 
 Edit `config/gpu_cost_rates.yaml` to update GPU hourly rates.
+
+## Custom Workloads
+
+Users can benchmark their own workload classes instead of only the built-in
+`resnet50` and `bert_base` examples.
+
+1. Add a workload class under [user_workloads](/Users/sahilmariwala/dev/msml606/msml605/gpu_cloud_benchmark/user_workloads) that subclasses [BaseWorkload](/Users/sahilmariwala/dev/msml606/msml605/gpu_cloud_benchmark/src/workloads/base.py).
+2. Register it in the config:
+
+```yaml
+custom_workloads:
+  my_model: "user_workloads.my_model:MyModelWorkload"
+
+workloads:
+  - my_model
+```
+
+3. Run the same benchmark pipeline. The framework will reuse the existing
+timing, GPU metrics, cost analysis, reporting, and recommendation steps.
+
+For one-off experiments, you can skip editing YAML and pass a workload class
+directly to the runner:
+
+```bash
+python -m src.runner \
+  --config config/benchmark_config_local.yaml \
+  --device cpu \
+  --workload-target user_workloads.example_mlp:ExampleMLPWorkload \
+  --workload-name my_custom_workload
+```
+
+See [user_workloads/example_mlp.py](/Users/sahilmariwala/dev/msml606/msml605/gpu_cloud_benchmark/user_workloads/example_mlp.py) and [user_workloads/template.py](/Users/sahilmariwala/dev/msml606/msml605/gpu_cloud_benchmark/user_workloads/template.py) for a starting point.
 
 ## Team
 

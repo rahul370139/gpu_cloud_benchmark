@@ -14,8 +14,8 @@ Sahil's infrastructure slice is responsible for:
 
 1. `provision`: create VPC, subnet, security group, S3 bucket, controller node, and worker nodes.
 2. `bootstrap`: wait for `k3s`, fetch kubeconfig, and verify node readiness.
-3. `deploy`: install the benchmark namespace, the GPU job definition, and Prometheus.
-4. `benchmark`: run Rahul's containerized workload as a Kubernetes Job.
+3. `deploy`: install the benchmark namespace, shared benchmark config, Prometheus, and Pushgateway.
+4. `benchmark`: render and run Rahul's containerized workload as one Kubernetes Job per GPU class.
 5. `log-costs`: snapshot instance metadata and upload spend-related tags to S3.
 6. `fault-inject`: drain a worker node and observe job recovery behavior.
 7. `teardown`: destroy the stack to prevent additional charges.

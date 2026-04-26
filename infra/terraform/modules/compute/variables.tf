@@ -6,7 +6,11 @@ variable "region" {
   type = string
 }
 
-variable "ami_id" {
+variable "controller_ami_id" {
+  type = string
+}
+
+variable "worker_ami_id" {
   type = string
 }
 
@@ -14,20 +18,27 @@ variable "controller_instance_type" {
   type = string
 }
 
-variable "worker_instance_type" {
-  type = string
-}
-
 variable "controller_hourly_rate" {
   type = number
 }
 
-variable "worker_hourly_rate" {
-  type = number
-}
+variable "worker_pools" {
+  description = <<EOT
+List of worker pools, one per GPU class. Each pool spins up `count`
+identical EC2 instances tagged and K8s-labeled with `gpu_class` so the
+benchmark Job can target them via nodeSelector.
+EOT
+  type = list(object({
+    gpu_class     = string
+    instance_type = string
+    hourly_rate   = number
+    count         = number
+  }))
 
-variable "worker_count" {
-  type = number
+  validation {
+    condition     = length(var.worker_pools) > 0
+    error_message = "worker_pools must contain at least one pool."
+  }
 }
 
 variable "subnet_ids" {
@@ -43,7 +54,8 @@ variable "key_name" {
 }
 
 variable "cluster_token" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 variable "artifact_bucket_name" {

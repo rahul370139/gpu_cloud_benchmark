@@ -13,3 +13,11 @@ output "artifact_bucket_name" {
 output "instance_ids" {
   value = module.compute.instance_ids
 }
+
+output "gpu_classes" {
+  value = module.compute.gpu_classes
+}
+
+output "worker_pools" {
+  value = module.compute.worker_pools
+}

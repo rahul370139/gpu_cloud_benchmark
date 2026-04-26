@@ -1,0 +1,25 @@
+# Shared resources used by every per-GPU-class benchmark Job.
+# Applied once before any Jobs are created.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: benchmark-config
+  namespace: ml-benchmark
+data:
+  benchmark_config.yaml: |
+    workloads:
+      - resnet50
+      - bert_base
+    batch_sizes:
+      - 1
+      - 8
+      - 32
+      - 64
+    num_repeats: 3
+    warmup_iters: 10
+    benchmark_iters: 100
+    seed: 42
+    modes:
+      - inference
+    output_dir: /artifacts
+    prometheus_pushgateway: "http://pushgateway.ml-benchmark.svc:9091"

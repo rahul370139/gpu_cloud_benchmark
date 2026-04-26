@@ -58,12 +58,20 @@ def main():
     # Generate charts
     generate_all_charts(chart_df, gpu_metrics_df, figures_dir)
 
-    # Load manifest if available
+    # Load manifest if available. When aggregating multi-GPU results, there may
+    # be multiple nested manifests rather than one root-level file, so fall back
+    # to a synthetic summary based on the merged raw results.
     manifest = None
     manifest_path = results_dir / "run_manifest.json"
     if manifest_path.exists():
         with open(manifest_path) as f:
             manifest = json.load(f)
+    else:
+        manifest = {
+            "environment": {},
+            "total_runs": len(raw_df),
+            "failed_runs": int(raw_df["error"].notna().sum()) if "error" in raw_df.columns else 0,
+        }
 
     # Generate HTML report
     output_path = generate_html_report(

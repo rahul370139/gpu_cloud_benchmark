@@ -12,11 +12,16 @@ CV_NOISY_THRESHOLD = 0.10  # 10%
 
 
 def load_summary_csvs(results_dir: str | Path) -> pd.DataFrame:
-    """Load and concatenate all benchmark_summary_*.csv files."""
+    """Load and concatenate all benchmark_summary_*.csv files.
+
+    Recursively walks `results_dir` so that results written by per-GPU-class
+    pods into subdirectories (e.g. results/T4/, results/A10G/) are all picked
+    up and merged into a single DataFrame.
+    """
     results_dir = Path(results_dir)
-    files = sorted(results_dir.glob("benchmark_summary_*.csv"))
+    files = sorted(results_dir.rglob("benchmark_summary_*.csv"))
     if not files:
-        raise FileNotFoundError(f"No benchmark_summary_*.csv files in {results_dir}")
+        raise FileNotFoundError(f"No benchmark_summary_*.csv files under {results_dir}")
 
     dfs = [pd.read_csv(f) for f in files]
     df = pd.concat(dfs, ignore_index=True)
@@ -79,8 +84,7 @@ def load_latency_csvs(results_dir: str | Path) -> pd.DataFrame:
     """Load all per-run latency CSVs into a single DataFrame with run metadata."""
     results_dir = Path(results_dir)
     frames = []
-    for f in sorted(results_dir.glob("*_latencies.csv")):
-        parts = f.stem.split("_")
+    for f in sorted(results_dir.rglob("*_latencies.csv")):
         # Filename: {gpu}_{workload}_{mode}_bs{batch}_r{repeat}_latencies
         df = pd.read_csv(f)
         df["source_file"] = f.name
@@ -94,7 +98,7 @@ def load_gpu_metrics_csvs(results_dir: str | Path) -> pd.DataFrame:
     """Load all GPU metric time-series CSVs."""
     results_dir = Path(results_dir)
     frames = []
-    for f in sorted(results_dir.glob("*_gpu_metrics.csv")):
+    for f in sorted(results_dir.rglob("*_gpu_metrics.csv")):
         df = pd.read_csv(f)
         df["source_file"] = f.name
         frames.append(df)

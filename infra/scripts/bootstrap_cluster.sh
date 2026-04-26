@@ -13,9 +13,14 @@ until run_ssh "$(controller_ip)" "sudo test -f /etc/rancher/k3s/k3s.yaml"; do
 done
 
 copy_from_controller "/etc/rancher/k3s/k3s.yaml" "${KUBECONFIG_LOCAL}"
-perl -0pi -e "s/127.0.0.1/$(controller_ip)/g" "${KUBECONFIG_LOCAL}"
+ensure_k3s_tunnel
 
 export KUBECONFIG="${KUBECONFIG_LOCAL}"
+
+echo "Waiting for Kubernetes nodes to register..."
+until [[ "$(kubectl get nodes --no-headers 2>/dev/null | wc -l | tr -d ' ')" -gt 0 ]]; do
+  sleep 5
+done
 
 kubectl wait --for=condition=Ready nodes --all --timeout=15m
 kubectl get nodes -o wide
