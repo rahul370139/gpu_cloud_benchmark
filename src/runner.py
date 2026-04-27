@@ -14,6 +14,7 @@ import numpy as np
 import torch
 import yaml
 
+from .benchmark_config import resolve_workload_specs
 from .workloads import get_workload, register_custom_workloads
 from .metrics.timer import CudaTimer
 from .metrics.gpu_collector import GpuCollector
@@ -131,26 +132,6 @@ def run_single_benchmark(
     return result, latencies, gpu_snapshots
 
 
-def _normalise_workload_config(raw_workloads) -> list[str]:
-    names: list[str] = []
-    for entry in raw_workloads:
-        if isinstance(entry, str):
-            names.append(entry)
-            continue
-        if isinstance(entry, dict):
-            name = entry.get("name")
-            target = entry.get("target")
-            if not name or not target:
-                raise ValueError(
-                    "Custom workload entries must include both 'name' and 'target'"
-                )
-            register_custom_workloads({name: target})
-            names.append(name)
-            continue
-        raise TypeError(f"Unsupported workload config entry: {entry!r}")
-    return names
-
-
 def _register_cli_workload_target(
     workload_target: str | None,
     workload_name: str | None,
@@ -178,6 +159,10 @@ def run_full_benchmark(
 
     _register_cli_workload_target(workload_target, workload_name, config)
 
+    pushgateway_override = os.environ.get("BENCHMARK_PROMETHEUS_PUSHGATEWAY")
+    if pushgateway_override:
+        config["prometheus_pushgateway"] = pushgateway_override
+
     output_dir = Path(os.environ.get("BENCHMARK_RESULTS_DIR", config.get("output_dir", "results")))
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "figures").mkdir(exist_ok=True)
@@ -195,28 +180,30 @@ def run_full_benchmark(
     seed_base = config.get("seed", 42)
 
     register_custom_workloads(config.get("custom_workloads"))
-    workloads = _normalise_workload_config(config.get("workloads", ["resnet50"]))
-    batch_sizes = config.get("batch_sizes", [1, 8, 32])
+    workload_specs = resolve_workload_specs(
+        config.get("workloads", ["resnet50"]),
+        default_batch_sizes=config.get("batch_sizes", [1, 8, 32]),
+        default_modes=config.get("modes", ["inference"]),
+    )
     num_repeats = config.get("num_repeats", 3)
     warmup_iters = config.get("warmup_iters", 10)
     benchmark_iters = config.get("benchmark_iters", 100)
-    modes = config.get("modes", ["inference"])
 
     all_results: list[dict] = []
     summary_csv = output_dir / f"benchmark_summary_{gpu_type}.csv"
 
-    for workload_name in workloads:
-        for mode in modes:
-            for batch_size in batch_sizes:
+    for workload_spec in workload_specs:
+        for mode in workload_spec.modes:
+            for batch_size in workload_spec.batch_sizes:
                 for repeat in range(1, num_repeats + 1):
                     run_seed = seed_base + repeat - 1
                     logger.info(
                         "=== Run: %s / %s / bs=%d / repeat=%d / seed=%d ===",
-                        workload_name, mode, batch_size, repeat, run_seed,
+                        workload_spec.name, mode, batch_size, repeat, run_seed,
                     )
                     try:
                         result, latencies, gpu_snaps = run_single_benchmark(
-                            workload_name=workload_name,
+                            workload_name=workload_spec.name,
                             batch_size=batch_size,
                             mode=mode,
                             device=device,
@@ -224,11 +211,12 @@ def run_full_benchmark(
                             benchmark_iters=benchmark_iters,
                             seed=run_seed,
                         )
+                        result["workload"] = workload_spec.name
                         result["gpu_type"] = gpu_type
                         result["repeat"] = repeat
 
                         # Per-run latency CSV
-                        latency_csv = output_dir / f"{gpu_type}_{workload_name}_{mode}_bs{batch_size}_r{repeat}_latencies.csv"
+                        latency_csv = output_dir / f"{gpu_type}_{workload_spec.name}_{mode}_bs{batch_size}_r{repeat}_latencies.csv"
                         with open(latency_csv, "w", newline="") as f:
                             writer = csv.writer(f)
                             writer.writerow(["iteration", "latency_ms"])
@@ -240,7 +228,7 @@ def run_full_benchmark(
                             collector = GpuCollector()
                             collector.snapshots = gpu_snaps
                             collector.save_csv(
-                                output_dir / f"{gpu_type}_{workload_name}_{mode}_bs{batch_size}_r{repeat}_gpu_metrics.csv"
+                                output_dir / f"{gpu_type}_{workload_spec.name}_{mode}_bs{batch_size}_r{repeat}_gpu_metrics.csv"
                             )
 
                         all_results.append(result)
@@ -249,7 +237,7 @@ def run_full_benchmark(
                             push_benchmark_metrics(
                                 job_name=f"benchmark_{gpu_type}",
                                 gpu_type=gpu_type,
-                                workload=workload_name,
+                                workload=workload_spec.name,
                                 batch_size=batch_size,
                                 throughput=result["throughput"],
                                 latency_p50=result["latency_p50_ms"],
@@ -260,10 +248,10 @@ def run_full_benchmark(
                             )
 
                     except Exception as e:
-                        logger.error("FAILED: %s/%s/bs%d/r%d: %s", workload_name, mode, batch_size, repeat, e)
+                        logger.error("FAILED: %s/%s/bs%d/r%d: %s", workload_spec.name, mode, batch_size, repeat, e)
                         all_results.append({
                             "gpu_type": gpu_type,
-                            "workload": workload_name,
+                            "workload": workload_spec.name,
                             "mode": mode,
                             "batch_size": batch_size,
                             "repeat": repeat,

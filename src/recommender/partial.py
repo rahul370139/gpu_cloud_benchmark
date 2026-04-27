@@ -15,6 +15,7 @@ import numpy as np
 import torch
 import yaml
 
+from ..benchmark_config import resolve_workload_specs
 from ..workloads import get_workload
 from ..metrics.timer import CudaTimer
 from ..metrics.gpu_collector import GpuCollector
@@ -232,18 +233,20 @@ class PartialProfiler:
             with open(rec_config_path) as f:
                 rec_cfg = yaml.safe_load(f).get("partial_benchmark", {})
 
-        workloads = cfg.get("workloads", ["resnet50"])
-        batch_sizes = rec_cfg.get("batch_sizes", cfg.get("batch_sizes", [1, 32]))
-        modes = rec_cfg.get("modes", cfg.get("modes", ["inference"]))
+        workload_specs = resolve_workload_specs(
+            cfg.get("workloads", ["resnet50"]),
+            default_batch_sizes=rec_cfg.get("batch_sizes", cfg.get("batch_sizes", [1, 32])),
+            default_modes=rec_cfg.get("modes", cfg.get("modes", ["inference"])),
+        )
         seed = cfg.get("seed", 42)
 
         results: list[PartialResult] = []
-        for wl in workloads:
-            for m in modes:
-                for bs in batch_sizes:
+        for workload_spec in workload_specs:
+            for m in workload_spec.modes:
+                for bs in workload_spec.batch_sizes:
                     try:
-                        r = self.run(wl, bs, m, device=device, seed=seed)
+                        r = self.run(workload_spec.name, bs, m, device=device, seed=seed)
                         results.append(r)
                     except Exception as e:
-                        logger.error("Partial benchmark failed: %s/%s/bs%d: %s", wl, m, bs, e)
+                        logger.error("Partial benchmark failed: %s/%s/bs%d: %s", workload_spec.name, m, bs, e)
         return results

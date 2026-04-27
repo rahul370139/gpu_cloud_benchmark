@@ -23,6 +23,12 @@ def main():
     parser = argparse.ArgumentParser(description="Generate benchmark report")
     parser.add_argument("--results-dir", type=str, default="results", help="Directory with benchmark CSVs")
     parser.add_argument("--cost-rates", type=str, default="config/gpu_cost_rates.yaml", help="GPU cost rates YAML")
+    parser.add_argument(
+        "--recommendation-json",
+        type=str,
+        default="",
+        help="Optional recommendation.json path to render into the report",
+    )
     parser.add_argument("--output", type=str, default="results/report.html", help="Output HTML path")
     args = parser.parse_args()
 
@@ -73,12 +79,22 @@ def main():
             "failed_runs": int(raw_df["error"].notna().sum()) if "error" in raw_df.columns else 0,
         }
 
+    recommendation = None
+    if args.recommendation_json:
+        recommendation_path = Path(args.recommendation_json)
+        if recommendation_path.exists():
+            with open(recommendation_path) as f:
+                recommendation = json.load(f)
+        else:
+            logger.warning("Recommendation JSON not found at %s — skipping recommendation section", recommendation_path)
+
     # Generate HTML report
     output_path = generate_html_report(
         agg_df=chart_df,
         cost_df=cost_df,
         figures_dir=figures_dir,
         manifest=manifest,
+        recommendation=recommendation,
         output_path=args.output,
     )
     logger.info("Report generated: %s", output_path)

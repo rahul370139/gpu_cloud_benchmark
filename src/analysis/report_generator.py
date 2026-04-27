@@ -28,6 +28,12 @@ def _format_int(value: object, empty: str = "—") -> str:
     return f"{int(value)}"
 
 
+def _format_currency(value: object, decimals: int = 2, suffix: str = "", empty: str = "—") -> str:
+    if pd.isna(value):
+        return empty
+    return f"${float(value):,.{decimals}f}{suffix}"
+
+
 def _to_html_table(df: pd.DataFrame, classes: str = "matrix-table") -> str:
     if df.empty:
         return "<p>No data available.</p>"
@@ -174,6 +180,33 @@ def _build_metric_matrix(
     return pivot
 
 
+def _build_recommendation_view(recommendation: dict | None) -> dict | None:
+    if not recommendation or recommendation.get("status") != "ok":
+        return None
+
+    rankings = recommendation.get("rankings", [])
+    if not rankings:
+        return None
+
+    top = rankings[0]
+    throughput_unit = top.get("throughput_unit", "samples/sec")
+    throughput_dollar_unit = top.get("throughput_unit", "samples")
+
+    return {
+        "gpu_type": top.get("gpu_type", "Unknown"),
+        "composite_score": f"{float(top.get('composite_score', 0)):.4f} / 1.0000",
+        "throughput": f"{float(top.get('throughput', 0)):,.2f} {throughput_unit}",
+        "latency_p95": f"{float(top.get('latency_p95_ms', 0)):.2f} ms",
+        "cost_per_hour": _format_currency(top.get("cost_per_hour", 0), decimals=2, suffix="/hr"),
+        "throughput_per_dollar": f"{float(top.get('throughput_per_dollar', 0)):,.0f} {throughput_dollar_unit}/$",
+        "data_quality": top.get("confidence_note", "n/a"),
+        "reasoning": top.get("reasoning", ""),
+        "detail_lines": top.get("detail_lines", []),
+        "constraints_applied": recommendation.get("constraints_applied", "none"),
+        "source": recommendation.get("source", "benchmark"),
+    }
+
+
 REPORT_TEMPLATE = Template("""\
 <!DOCTYPE html>
 <html lang="en">
@@ -201,11 +234,59 @@ REPORT_TEMPLATE = Template("""\
   .badge-warn { background: #fef3c7; color: #92400e; }
   .subtle { color: #475569; margin-bottom: 1rem; }
   .matrix-table td:first-child, .matrix-table th:first-child { text-align: left; }
+  .recommendation-card { margin: 1.5rem 0 2rem; padding: 1.25rem; border: 1px solid var(--border); border-left: 6px solid var(--accent); border-radius: 6px; background: white; }
+  .recommendation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1rem 0; }
+  .recommendation-metric { background: #f8fafc; border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem; }
+  .recommendation-metric-label { font-size: 0.8rem; color: #475569; margin-bottom: 0.25rem; }
+  .recommendation-metric-value { font-size: 1.05rem; font-weight: 600; }
+  .recommendation-list { margin: 0.75rem 0 0 1.2rem; }
+  .recommendation-list li { margin: 0.3rem 0; }
 </style>
 </head>
 <body>
 <h1>GPU Cloud Benchmark Report</h1>
 <p class="meta">Generated {{ generated_at }} | GPUs: {{ gpu_types|join(", ") }} | Scenarios: {{ scenario_count }} | Runs: {{ total_runs }} ({{ failed_runs }} failed)</p>
+
+{% if recommendation %}
+<h2>Recommendation</h2>
+<div class="recommendation-card">
+  <h3>Recommended GPU: {{ recommendation.gpu_type }}</h3>
+  <p class="subtle">Source: {{ recommendation.source }} | Constraints: {{ recommendation.constraints_applied }}</p>
+  <div class="recommendation-grid">
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Composite Score</div>
+      <div class="recommendation-metric-value">{{ recommendation.composite_score }}</div>
+    </div>
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Throughput</div>
+      <div class="recommendation-metric-value">{{ recommendation.throughput }}</div>
+    </div>
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Latency P95</div>
+      <div class="recommendation-metric-value">{{ recommendation.latency_p95 }}</div>
+    </div>
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Cost</div>
+      <div class="recommendation-metric-value">{{ recommendation.cost_per_hour }}</div>
+    </div>
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Throughput per Dollar</div>
+      <div class="recommendation-metric-value">{{ recommendation.throughput_per_dollar }}</div>
+    </div>
+    <div class="recommendation-metric">
+      <div class="recommendation-metric-label">Data Quality</div>
+      <div class="recommendation-metric-value">{{ recommendation.data_quality }}</div>
+    </div>
+  </div>
+  {% if recommendation.detail_lines %}
+  <ul class="recommendation-list">
+  {% for detail in recommendation.detail_lines %}
+    <li>{{ detail }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endif %}
 
 <h2>GPU Overview</h2>
 <p class="subtle">A single side-by-side view of coverage, average throughput, latency, utilization, and cost metrics for each GPU.</p>
@@ -320,6 +401,7 @@ def generate_html_report(
     cost_df: pd.DataFrame | None,
     figures_dir: str | Path,
     manifest: dict | None,
+    recommendation: dict | None,
     output_path: str | Path,
 ) -> Path:
     """Render a self-contained HTML report.
@@ -329,6 +411,7 @@ def generate_html_report(
         cost_df: Cost-enriched DataFrame (from cost.calculator), or None.
         figures_dir: Directory containing chart PNGs.
         manifest: run_manifest.json dict, or None.
+        recommendation: recommendation.json dict, or None.
         output_path: Where to write the HTML file.
     """
     output_path = Path(output_path)
@@ -360,6 +443,7 @@ def generate_html_report(
     gpu_overview_table = _to_html_table(_build_gpu_overview(agg_df, cost_df))
     winner_summary_table = _to_html_table(_build_winner_summary(agg_df, cost_df))
     scenario_leaderboard_table = _to_html_table(_build_scenario_leaderboard(agg_df, cost_df))
+    recommendation_view = _build_recommendation_view(recommendation)
     throughput_matrix_table = _to_html_table(
         _build_metric_matrix(agg_df, "mean_throughput", value_label="", decimals=1)
     )
@@ -379,6 +463,7 @@ def generate_html_report(
         scenario_count=scenario_count,
         total_runs=total_runs,
         failed_runs=failed_runs,
+        recommendation=recommendation_view,
         gpu_overview_table=gpu_overview_table,
         winner_summary_table=winner_summary_table,
         scenario_leaderboard_table=scenario_leaderboard_table,

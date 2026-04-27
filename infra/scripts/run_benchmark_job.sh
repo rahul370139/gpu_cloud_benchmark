@@ -30,7 +30,10 @@ fi
 
 echo "Applying shared resources (namespace, PVC, config)..."
 kubectl apply -f "${ROOT_DIR}/kubernetes/base/namespace.yaml"
-kubectl apply -f "${ROOT_DIR}/kubernetes/base/benchmark-shared.yaml"
+kubectl create configmap benchmark-config \
+  -n ml-benchmark \
+  --from-file=benchmark_config.yaml="${PROJECT_DIR}/config/benchmark_config.yaml" \
+  --dry-run=client -o yaml | kubectl apply -f -
 
 if [[ "${BENCHMARK_IMAGE}" == *.amazonaws.com/* ]]; then
   require_cmd aws
@@ -99,11 +102,6 @@ if [[ "${EXIT_CODE}" -eq 0 && -n "${ARTIFACT_BUCKET_NAME}" && "${ARTIFACT_BUCKET
     "s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/" \
     "${RESULTS_SYNC_DIR}"
 
-  echo "Generating consolidated comparison report..."
-  python3 "${PROJECT_DIR}/scripts/generate_report.py" \
-    --results-dir "${RESULTS_SYNC_DIR}" \
-    --output "${COMPARISON_DIR}/report.html"
-
   echo "Generating consolidated recommendation..."
   (
     cd "${PROJECT_DIR}"
@@ -111,6 +109,12 @@ if [[ "${EXIT_CODE}" -eq 0 && -n "${ARTIFACT_BUCKET_NAME}" && "${ARTIFACT_BUCKET
       --results-dir "${RESULTS_SYNC_DIR}" \
       -o "${COMPARISON_DIR}/recommendation.json"
   ) | tee "${COMPARISON_DIR}/recommendation.txt"
+
+  echo "Generating consolidated comparison report..."
+  python3 "${PROJECT_DIR}/scripts/generate_report.py" \
+    --results-dir "${RESULTS_SYNC_DIR}" \
+    --recommendation-json "${COMPARISON_DIR}/recommendation.json" \
+    --output "${COMPARISON_DIR}/report.html"
 
   echo "Uploading consolidated comparison bundle to S3..."
   aws s3 sync \

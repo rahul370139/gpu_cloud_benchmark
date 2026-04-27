@@ -47,6 +47,8 @@ spec:
               value: /app/config/benchmark_config.yaml
             - name: BENCHMARK_RESULTS_DIR
               value: /artifacts/${GPU_CLASS}
+            - name: BENCHMARK_PROMETHEUS_PUSHGATEWAY
+              value: http://pushgateway.ml-benchmark.svc:9091
             - name: BENCHMARK_RUN_ID
               value: ${BENCHMARK_RUN_ID}
             - name: BENCHMARK_GPU_CLASS

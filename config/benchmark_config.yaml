@@ -5,6 +5,10 @@ workloads:
   - resnet50
   - bert_base
   - example_mlp
+  - name: clip_image_embedding
+    target: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
+    modes: [inference]
+    batch_sizes: [1, 8, 32]
 
 batch_sizes:
   - 1

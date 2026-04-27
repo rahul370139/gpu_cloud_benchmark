@@ -29,7 +29,7 @@ This repository contains the infrastructure and orchestration scaffold for Sahil
 4. Configure `kubectl` access and deploy shared cluster resources:
 
 ```bash
-export SSH_KEY_PATH=/absolute/path/to/mac-new.pem
+export SSH_KEY_PATH=/Users/sahilmariwala/.ssh/mac-new.pem
 ./scripts/run_pipeline.sh bootstrap
 ./scripts/run_pipeline.sh deploy
 ```
