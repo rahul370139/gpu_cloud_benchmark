@@ -13,11 +13,11 @@ echo " Device : ${DEVICE:-auto}"
 echo " Results: ${RESULTS_DIR}"
 echo "=========================================="
 
-echo "[1/5] Running preflight checks..."
+echo "[1/6] Running preflight checks..."
 python /app/scripts/preflight_check.py
 echo "       Preflight OK."
 
-echo "[2/5] Capturing environment..."
+echo "[2/6] Capturing environment..."
 python -c "
 from src.reproducibility.env_capture import capture_environment
 import json, pathlib
@@ -28,14 +28,14 @@ out.write_text(json.dumps(env, indent=2))
 print(f'       Environment snapshot -> {out}')
 "
 
-echo "[3/5] Running benchmarks..."
+echo "[3/6] Running benchmarks..."
 DEVICE_ARG=""
 if [ -n "${DEVICE}" ]; then
     DEVICE_ARG="--device ${DEVICE}"
 fi
 BENCHMARK_RESULTS_DIR="${RESULTS_DIR}" python -m src.runner --config "${CONFIG}" ${DEVICE_ARG}
 
-echo "[4/5] Generating report..."
+echo "[4/6] Generating report..."
 python /app/scripts/generate_report.py --results-dir "${RESULTS_DIR}" --output "${RESULTS_DIR}/report.html"
 
 echo "[5/6] Running GPU recommendation engine..."

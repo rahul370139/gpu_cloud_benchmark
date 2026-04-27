@@ -1,8 +1,8 @@
 # System Architecture & Project Overview
 
 **Project:** Containerized, Reproducible Benchmarking of ML Workloads Across Cloud GPUs  
-**Version:** 2.0 — with Intelligent GPU Recommendation Engine  
-**Date:** April 5, 2026
+**Version:** 3.0 — Recommendation Engine + AWS Multi-GPU Cloud Pipeline  
+**Date:** April 26, 2026
 
 ---
 
@@ -18,6 +18,7 @@
 8. [Data Flow](#8-data-flow)
 9. [Configuration Reference](#9-configuration-reference)
 10. [Extensibility Guide](#10-extensibility-guide)
+11. [Cloud Pipeline (v3.0) — AWS · Terraform · k3s · S3 · CI](#11-cloud-pipeline-v30)
 
 ---
 
@@ -410,10 +411,10 @@ gpu_cloud_benchmark/
 |
 |-- src/                                 CORE LIBRARY
 |   |-- __init__.py
-|   |-- runner.py                        Main benchmark orchestrator
+|   |-- runner.py                        Main benchmark orchestrator (--workload-target supported)
 |   |
 |   |-- workloads/                       ML WORKLOAD DEFINITIONS
-|   |   |-- __init__.py                  Lazy registry: name -> class
+|   |   |-- __init__.py                  Lazy registry + register_custom_workloads()
 |   |   |-- base.py                      Abstract BaseWorkload contract
 |   |   |-- vision.py                    ResNet-50 workload
 |   |   |-- nlp.py                       BERT-base workload
@@ -422,7 +423,7 @@ gpu_cloud_benchmark/
 |   |   |-- __init__.py
 |   |   |-- timer.py                     CudaTimer + WallTimer
 |   |   |-- gpu_collector.py             Background GPU metric poller
-|   |   |-- prometheus_exporter.py       Push metrics to Prometheus
+|   |   |-- prometheus_exporter.py       Push metrics to Prometheus Pushgateway
 |   |
 |   |-- cost/                            COST ANALYSIS
 |   |   |-- __init__.py
@@ -440,47 +441,91 @@ gpu_cloud_benchmark/
 |   |   |-- checksum.py                  SHA-256 of files and env
 |   |   |-- env_capture.py               Snapshot runtime environment
 |   |
-|   |-- recommender/                     GPU RECOMMENDATION ENGINE (NEW)
-|       |-- __init__.py                  Public API exports
-|       |-- __main__.py                  CLI: python -m src.recommender
-|       |-- engine.py                    Main orchestrator (3 modes)
-|       |-- partial.py                   Convergence-checked short runs
-|       |-- history.py                   SQLite historical logging
-|       |-- scorer.py                    Multi-criteria GPU scoring
-|       |-- constraints.py               Budget/latency constraint filter
-|       |-- predictor.py                 KNN workload-similarity predictor
+|   |-- recommender/                     GPU RECOMMENDATION ENGINE (v2.0)
+|   |   |-- __init__.py                  Public API exports
+|   |   |-- __main__.py                  CLI: python -m src.recommender
+|   |   |-- engine.py                    Main orchestrator (3 modes)
+|   |   |-- partial.py                   Convergence-checked short runs
+|   |   |-- history.py                   SQLite historical logging
+|   |   |-- scorer.py                    Multi-criteria GPU scoring
+|   |   |-- constraints.py               Budget/latency constraint filter
+|   |   |-- predictor.py                 KNN workload-similarity predictor
+|   |
+|   |-- artifacts/                       CLOUD ARTIFACT UPLOAD (v3.0)
+|       |-- __init__.py
+|       |-- s3_uploader.py               Upload run artifacts to S3 with run-id/gpu-class prefix
+|
+|-- user_workloads/                      USER-DEFINED WORKLOADS (v3.0)
+|   |-- __init__.py
+|   |-- example_mlp.py                   Reference custom workload (synthetic MLP)
+|   |-- template.py                      Boilerplate to copy when adding a workload
 |
 |-- scripts/                             EXECUTABLE SCRIPTS
-|   |-- entrypoint.sh                   Docker ENTRYPOINT (5-stage pipeline)
+|   |-- entrypoint.sh                   Docker ENTRYPOINT (6-stage pipeline)
 |   |-- preflight_check.py              Validate GPU / driver / CUDA
 |   |-- generate_report.py              CLI to produce report from CSVs
+|   |-- build_push_ecr.sh               Multi-arch buildx + push to AWS ECR
 |
-|-- k8s/                                KUBERNETES MANIFESTS
-|   |-- benchmark-job.yaml              K8s Job spec (GPU, PVC, ConfigMap)
-|   |-- prometheus/
-|       |-- pushgateway-deploy.yaml      Prometheus Pushgateway deployment
-|       |-- grafana-dashboard.json       Pre-built Grafana dashboard
+|-- infra/                              CLOUD INFRASTRUCTURE (v3.0 — Sahil)
+|   |-- README.md                       Infra quick-start
+|   |-- terraform/
+|   |   |-- envs/aws-gpu/               Composition: VPC + security + compute + S3
+|   |   |-- modules/network/            VPC, subnets, IGW, route tables
+|   |   |-- modules/security/           Security group, admin CIDRs
+|   |   |-- modules/compute/            Controller + per-class GPU worker pools, S3, IAM
+|   |-- kubernetes/
+|   |   |-- base/namespace.yaml         ml-benchmark namespace
+|   |   |-- base/benchmark-shared.yaml  ConfigMap with benchmark YAML
+|   |   |-- base/benchmark-job.yaml     Job template (envsubst placeholders)
+|   |   |-- monitoring/prometheus*.yaml Prometheus + Pushgateway
+|   |-- scripts/                        End-to-end pipeline (provision -> teardown)
+|   |   |-- run_pipeline.sh             Single dispatcher
+|   |   |-- provision.sh                terraform apply
+|   |   |-- bootstrap_cluster.sh        Wait for k3s, fetch kubeconfig
+|   |   |-- deploy_benchmark_stack.sh   kubectl apply namespace+config+monitoring
+|   |   |-- run_benchmark_job.sh        Render Job per GPU class + parallel apply + S3 sync + recommend
+|   |   |-- log_costs.sh                aws ec2 describe-instances + S3 upload
+|   |   |-- fault_injection.sh          cordon + drain + recover
+|   |   |-- teardown.sh                 terraform destroy (cost protection)
+|   |   |-- common.sh                   Shared helpers (k3s tunnel, inventory load)
+|   |-- docs/infra-workflow.md          Lifecycle and fault-injection mechanics
+|
+|-- k8s/                                LEGACY KUBERNETES MANIFESTS (v1.0)
+|   |-- prometheus/                     Original Prometheus configs (now superseded by infra/kubernetes/monitoring/)
+|
+|-- .github/                            CI/CD
+|   |-- workflows/ci.yaml               python tests · terraform fmt+validate · docker build
+|
+|-- docs/
+|   |-- final-validation-checklist.md   Local -> Docker -> AWS smoke -> final cloud-run sequence
 |
 |-- data/                               PERSISTENT DATA
 |   |-- benchmark_history.db            SQLite history (auto-created)
 |
-|-- tests/                              UNIT TESTS
-|   |-- test_workloads.py               Workload shape, inference, training
-|   |-- test_metrics.py                 Timer accuracy, CUDA events
-|   |-- test_cost.py                    Cost formula validation
-|   |-- test_reproducibility.py         Seed determinism, checksums
+|-- tests/                              UNIT TESTS (72 total)
+|   |-- test_workloads.py               15 — workload shape, inference, training
+|   |-- test_metrics.py                  4 — Timer accuracy, CUDA events
+|   |-- test_cost.py                     5 — Cost formula validation
+|   |-- test_reproducibility.py          9 — Seed determinism, checksums
+|   |-- test_recommender.py             37 — engine, scorer, constraints, predictor, history
+|   |-- test_prometheus_exporter.py      1 — Pushgateway gauges + no-op fallback
+|   |-- test_s3_uploader.py              1 — S3 prefix + per-file upload
 |
 |-- notebooks/
 |   |-- analysis.ipynb                  Interactive result exploration
 |
-|-- Dockerfile                          Container image definition
+|-- Dockerfile                          Container image (uses requirements-runtime.txt)
+|-- requirements-runtime.txt            Container-only deps (no torch, base image has it)
+|-- requirements.txt                    Local-dev deps (incl. torch)
 |-- .dockerignore                       Exclude tests/notebooks from image
-|-- .gitignore                          Exclude results/caches from git
-|-- requirements.txt                    Pinned Python dependencies
-|-- README.md                           Quick-start guide
-|-- PROJECT_PROGRESS.md                 Team progress tracker
-|-- DGX2_BENCHMARK_LOG.md              GPU run metrics log
+|-- .gitignore                          Excludes results/, *.db, infra state
+|-- README.md                           Quick-start (local, Docker, k3s, custom workloads)
+|-- PROJECT_PROGRESS.md                 Joint progress tracker
+|-- DGX2_BENCHMARK_LOG.md              NVIDIA GB10 (DGX Spark) run log
+|-- AWS_BENCHMARK_LOG.md                AWS A10G + T4 multi-GPU run log
+|-- UPGRADED_PROPOSAL.md                Original proposal vs delivered system
 |-- ARCHITECTURE.md                     This file
+|-- report.html                         Cross-GPU comparison report (AWS run, 2026-04-25)
 ```
 
 ---
@@ -559,43 +604,124 @@ to the rest of the system.
 | `constraints.py` | **User constraint filter**. `UserConstraints` dataclass: `max_cost_per_hour`, `max_latency_p95_ms`, `min_throughput`, `max_gpu_memory_gb`. `apply_constraints()` partitions scored GPUs into (feasible, excluded) with per-GPU rejection reasons. Warns when all GPUs are excluded (constraints too restrictive). |
 | `predictor.py` | **Workload-similarity predictor**. `WorkloadPredictor` class. Extracts features: `log(param_count)`, `log(batch_size)`, `log(memory_footprint)`, `is_training` — each weighted per config. Computes euclidean distance to all historical runs. For each GPU type, finds K nearest neighbours (default 3), uses inverse-distance weighted interpolation to predict throughput, latency, and memory. Confidence = 1 - (mean_distance / max_distance). Returns `PredictionResult` per GPU. `predict_with_cost()` augments predictions with cost metrics for direct scoring. |
 
-### 7.3 Scripts (`scripts/`)
+#### Artifacts (`src/artifacts/`) — v3.0
 
 | File | Purpose |
 |------|---------|
-| `entrypoint.sh` | **Docker ENTRYPOINT**. Now a **5-stage** pipeline: (1) preflight, (2) env capture, (3) benchmark, (4) report, (5) GPU recommendation. |
+| `s3_uploader.py` | **S3 upload helper**. `maybe_upload_results()` reads `BENCHMARK_ARTIFACT_BUCKET`, `BENCHMARK_RUN_ID`, `BENCHMARK_GPU_CLASS`, and `POD_NAME` from environment, builds a hierarchical S3 key prefix (`benchmark-runs/{run_id}/{gpu_class}/{pod_name}/`), and uploads every file under the results directory with content-type detection. Standalone CLI: `python -m src.artifacts.s3_uploader --results-dir results/`. Used by stage 6 of the Docker entrypoint. |
+
+### 7.3 User Workloads (`user_workloads/`) — v3.0
+
+| File | Purpose |
+|------|---------|
+| `__init__.py` | Marks `user_workloads` as a package so import paths like `user_workloads.example_mlp:ExampleMLPWorkload` resolve. |
+| `example_mlp.py` | **Reference custom workload**. Synthetic 3-layer MLP (34K params) with feature/label generation, forward pass, and metadata. Used as a copy-paste starting point and a CPU smoke test. |
+| `template.py` | **Boilerplate**. Minimal `BaseWorkload` subclass with stub methods. Copy this when adding a new workload. |
+
+A custom workload is registered three ways:
+1. **YAML**: add `custom_workloads: { my_model: "user_workloads.my_model:MyModelWorkload" }` to the benchmark config.
+2. **CLI**: `python -m src.runner --workload-target user_workloads.my_model:MyModelWorkload`.
+3. **Python API**: `from src.workloads import register_workload; register_workload("name", "module:Class")`.
+
+### 7.4 Scripts (`scripts/`)
+
+| File | Purpose |
+|------|---------|
+| `entrypoint.sh` | **Docker ENTRYPOINT**. Now a **6-stage** pipeline: (1) preflight, (2) env capture, (3) benchmark, (4) report, (5) GPU recommendation, (6) S3 upload. |
 | `preflight_check.py` | **Fail-fast validator**. Checks Python, PyTorch, CUDA, nvidia-smi, pynvml. |
 | `generate_report.py` | **Standalone report CLI**. Load CSVs, run analysis, generate HTML report. |
+| `build_push_ecr.sh` | **Multi-arch image push to ECR**. Sets up `docker buildx`, logs into ECR, builds for `linux/amd64` (default), and pushes — essential when developing on Apple Silicon and deploying to AWS amd64 EC2. |
 
-### 7.4 Kubernetes (`k8s/`)
+### 7.5 Cloud Infrastructure (`infra/`) — v3.0
+
+The entire `infra/` tree is **Sahil's portion** of the project. It packages the cloud
+provisioning, k3s cluster, K8s manifests, and lifecycle scripts.
+
+#### Terraform modules (`infra/terraform/`)
+
+| Path | Purpose |
+|------|---------|
+| `envs/aws-gpu/main.tf` | Wires the network + security + compute modules together; emits `inventory.json` consumed by the bash pipeline. |
+| `envs/aws-gpu/variables.tf` | All knobs: region, AZs, subnet CIDRs, admin CIDR, AMI IDs, instance types, hourly rates, S3 bucket, **`worker_pools` list — one entry per GPU class** (e.g. `T4 / g4dn.xlarge / $0.526` and `A10G / g5.xlarge / $1.006`). |
+| `modules/network/` | VPC (10.42.0.0/16), public subnets, IGW, route tables. |
+| `modules/security/` | Security group rules — admin CIDR for SSH, intra-cluster ports for k3s + Prometheus. |
+| `modules/compute/` | EC2 controller (k3s server) + dynamic per-GPU-class worker pools, S3 artifact bucket, IAM roles, cloud-init scripts. Pulls the latest official Ubuntu GPU DLAMI by SSM parameter so CUDA + nvidia-driver are pre-installed. |
+
+#### Kubernetes manifests (`infra/kubernetes/`)
 
 | File | Purpose |
 |------|---------|
-| `benchmark-job.yaml` | K8s Job: requests `nvidia.com/gpu: 1`, PVC for results, ConfigMap for config, 2 retries, 1hr TTL. |
-| `prometheus/pushgateway-deploy.yaml` | Deployment + Service for Prometheus Pushgateway (port 9091). |
-| `prometheus/grafana-dashboard.json` | Pre-built Grafana dashboard: 5 panels for benchmark metrics. |
+| `base/namespace.yaml` | `ml-benchmark` namespace. |
+| `base/benchmark-shared.yaml` | ConfigMap that the benchmark pods mount as `benchmark_config.yaml`. Contains workload list, batch sizes, repeats, Pushgateway URL. |
+| `base/benchmark-job.yaml` | **Job template with `${...}` placeholders** rendered by `envsubst`. One Job is created per GPU class: `nvidia.com/gpu: 1`, `runtimeClassName: nvidia`, `nodeSelector: gpu-benchmark/gpu-class=<CLASS>`, `imagePullSecrets: benchmark-registry-credentials` (auto-refreshed for ECR), `BENCHMARK_RESULTS_DIR=/artifacts/${GPU_CLASS}`. |
+| `monitoring/prometheus.yaml` | Prometheus + Pushgateway Deployment/Service. Pushgateway scraped by Prometheus; exposes port 9091. |
+| `monitoring/prometheus-configmap.yaml` | Prometheus scrape config. |
 
-### 7.5 Tests (`tests/`)
+#### Pipeline scripts (`infra/scripts/`)
+
+| Script | Verb | What it does |
+|--------|------|--------------|
+| `run_pipeline.sh` | dispatcher | Single entry point with 7 verbs (below). |
+| `provision.sh` | `provision` | `terraform apply` and emits `inventory.json`. |
+| `bootstrap_cluster.sh` | `bootstrap` | Opens an SSH tunnel to k3s controller, fetches `kubeconfig`, waits for nodes ready. |
+| `deploy_benchmark_stack.sh` | `deploy` | `kubectl apply` namespace + ConfigMap + Prometheus stack. |
+| `run_benchmark_job.sh` | `benchmark` | Renders Job per GPU class with `envsubst`, applies in parallel, `kubectl wait --for=condition=complete`, then **syncs results from S3, regenerates the consolidated `report.html` + `recommendation.json`, and re-uploads the comparison bundle**. |
+| `log_costs.sh` | `log-costs` | `aws ec2 describe-instances` + per-instance metadata snapshot uploaded to S3. |
+| `fault_injection.sh` | `fault-inject` | `kubectl cordon` -> `kubectl delete pod` -> `kubectl drain` -> wait 30s -> `kubectl uncordon` to measure recovery cost/time. |
+| `teardown.sh` | `teardown` | `terraform destroy` to prevent runaway spend. |
+| `common.sh` | (sourced) | Helpers: `require_cmd`, `ensure_k3s_tunnel`, `load_inventory`, `artifact_bucket`. |
+
+### 7.6 CI/CD (`.github/workflows/ci.yaml`) — v3.0
+
+Three jobs run on every push to `main` and every pull request:
+
+| Job | Steps | Why |
+|-----|-------|-----|
+| `python` | Setup Python 3.11 → install CPU torch + `requirements.txt` → `pytest -q tests/` | Catch code regressions cheaply on CPU. |
+| `terraform` | Setup Terraform 1.7.5 → `fmt -check -recursive` → `init -backend=false` → `validate` | Catch IaC syntax bugs before any `apply`. |
+| `docker` | `docker buildx` build (no push) | Catch Dockerfile drift. |
+
+The benchmark itself is deliberately **not** run in CI — see `PROJECT_PROGRESS.md` §9
+for the rationale and recommended optional workflow extensions.
+
+### 7.7 Legacy Kubernetes (`k8s/`)
+
+| File | Status |
+|------|--------|
+| `k8s/prometheus/*` | **Superseded** by `infra/kubernetes/monitoring/`. Kept for reference; the active stack is in `infra/`. |
+
+### 7.8 Tests (`tests/`)
 
 | File | Tests | Purpose |
-|------|-------|---------|
-| `test_workloads.py` | 15 | Workload registry, output shapes, metadata, warmup, samples_per_batch. |
-| `test_metrics.py` | 3 | Timer accuracy, CUDA event fallback. |
+|------|------:|---------|
+| `test_workloads.py` | 15 | Workload registry, output shapes, metadata, warmup, samples_per_batch, custom workload registration. |
+| `test_metrics.py` | 4 | Timer accuracy, CUDA event fallback. |
 | `test_cost.py` | 5 | Cost formula validation, ranking, edge cases. |
-| `test_reproducibility.py` | 8 | Seed determinism, checksums, env capture. |
+| `test_reproducibility.py` | 9 | Seed determinism, checksums, env capture. |
+| `test_recommender.py` | 37 | history · scorer · constraints · predictor · engine · CLI. |
+| `test_prometheus_exporter.py` | 1 | Pushgateway gauges + no-op fallback. |
+| `test_s3_uploader.py` | 1 | S3 prefix construction + per-file upload (boto3 mocked). |
+| **TOTAL** | **72** | |
 
-### 7.6 Other Files
+### 7.9 Documentation Files
 
 | File | Purpose |
 |------|---------|
-| `Dockerfile` | Container image: `nvcr.io/nvidia/pytorch:24.08-py3` base, installs deps, copies code, 5-stage entrypoint. |
+| `Dockerfile` | Container image: `nvcr.io/nvidia/pytorch:24.08-py3` base, installs `requirements-runtime.txt`, copies `src/`, `config/`, `scripts/`, `user_workloads/`. 6-stage entrypoint. |
 | `.dockerignore` | Excludes tests, notebooks, results, .git from build context. |
-| `.gitignore` | Excludes results, data/*.db, __pycache__, .DS_Store. |
-| `requirements.txt` | Pinned deps: torch, torchvision, transformers, pynvml, prometheus-client, pandas, numpy, matplotlib, seaborn, jinja2, pyyaml, weasyprint, pytest. |
-| `README.md` | Quick-start guide: local, Docker, K8s, recommendation CLI. |
-| `PROJECT_PROGRESS.md` | Team progress tracker. |
-| `DGX2_BENCHMARK_LOG.md` | NVIDIA GB10 GPU benchmark metrics log. |
+| `.gitignore` | Excludes results, data/*.db, infra state files, kubeconfig, __pycache__, .DS_Store. |
+| `requirements.txt` | Local-dev deps (incl. torch). |
+| `requirements-runtime.txt` | Container-only deps (no torch, base image has it). Includes `boto3` for S3 uploads. |
+| `README.md` | Quick-start: local, Docker, AWS k3s pipeline, custom workloads. |
+| `PROJECT_PROGRESS.md` | Joint progress tracker (Rahul + Sahil). |
+| `DGX2_BENCHMARK_LOG.md` | NVIDIA GB10 (DGX Spark) run log. |
+| `AWS_BENCHMARK_LOG.md` | AWS A10G + T4 multi-GPU run log. |
+| `UPGRADED_PROPOSAL.md` | Original proposal annotated with what was actually delivered. |
+| `docs/final-validation-checklist.md` | Local → Docker → AWS smoke → final cloud-run sequence. |
+| `infra/README.md` | Infra quick-start. |
+| `infra/docs/infra-workflow.md` | Pipeline lifecycle and fault-injection mechanics. |
 | `notebooks/analysis.ipynb` | Interactive Jupyter notebook for result exploration. |
+| `report.html` | **Cross-GPU comparison report** from the April 25 AWS A10G + T4 run. |
 
 ---
 
@@ -825,3 +951,137 @@ python -m src.recommender import --results-dir results_old/
 The predictor currently uses 4 features. To add more (e.g., FLOPs, model
 depth), extend `_build_feature_vector()` in `predictor.py` and add the
 feature weight to the config.
+
+### Adding a Custom Workload
+
+```bash
+cp user_workloads/template.py user_workloads/my_model.py
+# implement setup, generate_batch, _forward, get_metadata
+python -m src.runner \
+  --config config/benchmark_config_local.yaml \
+  --device cpu \
+  --workload-target user_workloads.my_model:MyModelWorkload \
+  --workload-name my_model
+```
+
+Or register it permanently in YAML:
+
+```yaml
+custom_workloads:
+  my_model: "user_workloads.my_model:MyModelWorkload"
+workloads:
+  - my_model
+```
+
+---
+
+## 11. Cloud Pipeline (v3.0)
+
+This section describes the production AWS pipeline that was used to generate the
+April 25 multi-GPU comparison report. It glues Rahul's containerised benchmark
+to Sahil's IaC + k3s infrastructure.
+
+### 11.1 End-to-End Cloud Workflow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Dev as Developer / CI
+    participant TF as Terraform
+    participant AWS as AWS (EC2 + S3)
+    participant K3s as k3s Control Plane
+    participant Pod as Benchmark Pod (per GPU class)
+    participant ECR as AWS ECR
+    participant S3 as S3 Bucket
+    participant Engine as Recommender
+
+    Dev->>TF: run_pipeline.sh provision
+    TF->>AWS: create VPC, EC2 controller, GPU workers, S3 bucket
+    AWS-->>TF: instance IDs, public IPs
+    TF-->>Dev: inventory.json
+    Dev->>K3s: run_pipeline.sh bootstrap (kubeconfig)
+    Dev->>K3s: run_pipeline.sh deploy (namespace, ConfigMap, Prometheus)
+    Dev->>K3s: run_pipeline.sh benchmark
+    K3s->>Pod: kubectl apply Job (one per GPU class, parallel)
+    Pod->>ECR: docker pull gpu-benchmark:latest
+    Pod->>Pod: 6-stage entrypoint
+    Note over Pod: 1 preflight · 2 env<br/>3 benchmark · 4 report<br/>5 recommend · 6 S3 upload
+    Pod->>S3: upload results to benchmark-runs/{run_id}/{GPU_class}/
+    K3s-->>Dev: kubectl wait condition=complete
+    Dev->>S3: aws s3 sync (consolidate results)
+    Dev->>Engine: python -m src.recommender recommend (cross-GPU)
+    Engine-->>Dev: comparison report.html + recommendation.json
+    Dev->>S3: aws s3 sync comparison/ bundle
+    Dev->>AWS: run_pipeline.sh teardown -> terraform destroy
+```
+
+### 11.2 Why one Job per GPU Class (and not one Job that targets multiple)
+
+Each Kubernetes Job in `infra/kubernetes/base/benchmark-job.yaml` is rendered
+separately with `envsubst`, gets a unique `metadata.name`
+(`benchmark-run-<gpu-class-lower>`), pins itself to a specific node pool with
+`nodeSelector: gpu-benchmark/gpu-class=<CLASS>`, and writes its output to a
+class-specific S3 prefix. This gives:
+
+- **Parallelism**: T4 and A10G runs execute concurrently — wall-clock = max(per-class), not sum.
+- **Fault isolation**: a kernel-level failure on T4 does not poison the A10G run.
+- **Independent retry**: `backoffLimit: 1` per Job; one class can fail and re-launch.
+- **Clean artifact paths**: `s3://<bucket>/benchmark-runs/<run-id>/<GPU_CLASS>/<pod-name>/` is the natural hierarchy for both per-pod logs and the consolidated comparison step.
+
+### 11.3 The Image-Architecture Trap (and how `build_push_ecr.sh` solves it)
+
+Apple Silicon laptops build `linux/arm64` images by default. AWS EC2 GPU
+instances (g4dn, g5) are `linux/amd64`. A pod built for the wrong architecture
+will fail with `exec format error`. `scripts/build_push_ecr.sh` always builds
+for `linux/amd64` via `docker buildx --platform linux/amd64` and pushes
+directly to ECR — this is the single command Sahil's pipeline assumes.
+
+### 11.4 Cost Controls
+
+| Control | Where | Effect |
+|---------|-------|--------|
+| `terraform destroy` after every run | `infra/scripts/teardown.sh` | Removes EC2 + S3 unless explicitly preserved |
+| `ttlSecondsAfterFinished: 3600` | `benchmark-job.yaml` | Auto-cleans Jobs 1 hour after completion |
+| `backoffLimit: 1` | `benchmark-job.yaml` | At most one retry to avoid runaway re-runs |
+| Per-instance hourly rate baked into Terraform | `worker_pools` variable | Forces explicit cost acknowledgement when adding a GPU class |
+| Cost snapshot uploaded to S3 | `log_costs.sh` | Audit trail of which instances ran when |
+
+### 11.5 Observability
+
+Two parallel telemetry channels operate during a run:
+
+```mermaid
+graph LR
+    subgraph PUSH["Push channel"]
+        WL["Workload"] -->|push gauges| PG["Pushgateway"]
+        PG --> PROM["Prometheus"]
+        PROM --> GRAF["Grafana"]
+    end
+    subgraph PULL["Pull channel"]
+        WL -->|write CSV| FS["pod local FS"]
+        FS -->|S3 upload| S3O[("S3")]
+        S3O -->|sync| LOCAL["Local results dir"]
+        LOCAL --> RPT["report.html"]
+    end
+```
+
+The push channel is **for live monitoring** during a run. The pull channel is
+**the authoritative artifact store** — it's what the post-run recommender reads
+and what any downstream report regeneration uses.
+
+### 11.6 Where Rahul's Code Plugs Into Sahil's Pipeline
+
+Five well-defined hand-off points:
+
+| Hand-off | Producer (Sahil) | Consumer (Rahul) |
+|----------|------------------|-------------------|
+| Container image | ECR pushed by `build_push_ecr.sh` | `benchmark-job.yaml` `image:` field |
+| Per-pod config | ConfigMap mounted at `/app/config/benchmark_config.yaml` | `src/runner.py` reads via `BENCHMARK_CONFIG` env var |
+| GPU class label | `BENCHMARK_GPU_CLASS` env var | `src/artifacts/s3_uploader.py` builds prefix |
+| Run ID | `BENCHMARK_RUN_ID` env var | Same — used for cross-run correlation |
+| S3 bucket | `BENCHMARK_ARTIFACT_BUCKET` env var | `src/artifacts/s3_uploader.py` upload destination |
+
+The consolidated comparison step (post-`kubectl wait`) is where the two halves
+meet again: `aws s3 sync` pulls every pod's artifacts back, then
+`python -m src.recommender recommend` runs across the union to emit the
+final cross-GPU `recommendation.json`.

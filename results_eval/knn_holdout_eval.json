@@ -1,0 +1,51 @@
+{
+  "imports": {
+    "dgx_rows": 48,
+    "aws_rows": 16
+  },
+  "history_stats": {
+    "total_runs": 64,
+    "gpus_benchmarked": 3,
+    "workloads_benchmarked": 2,
+    "distinct_gpus": [
+      "A10G",
+      "NVIDIA_GB10",
+      "T4"
+    ],
+    "distinct_workloads": [
+      "bert_base",
+      "resnet50"
+    ]
+  },
+  "heldout_query": {
+    "workload": "bert_base",
+    "batch_size": 32,
+    "mode": "inference",
+    "family": "nlp"
+  },
+  "comparison": [
+    {
+      "gpu_type": "A10G",
+      "predicted_throughput": 75695.78,
+      "actual_throughput": 101719.3,
+      "abs_pct_error": 25.58,
+      "predicted_latency_p95_ms": 186.4508,
+      "actual_latency_p95_ms": 161.21,
+      "confidence": 0.7234
+    },
+    {
+      "gpu_type": "T4",
+      "predicted_throughput": 15128.72,
+      "actual_throughput": 19384.5,
+      "abs_pct_error": 21.95,
+      "predicted_latency_p95_ms": 944.6273,
+      "actual_latency_p95_ms": 850.03,
+      "confidence": 0.7234
+    }
+  ],
+  "winner_match": true,
+  "actual_winner": "A10G",
+  "predicted_winner": "A10G",
+  "actual_a10g_over_t4_ratio": 5.247,
+  "predicted_a10g_over_t4_ratio": 5.003
+}
