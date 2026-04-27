@@ -51,6 +51,8 @@ spec:
               value: http://pushgateway.ml-benchmark.svc:9091
             - name: BENCHMARK_RUN_ID
               value: ${BENCHMARK_RUN_ID}
+            - name: BENCHMARK_EXECUTION_ID
+              value: ${BENCHMARK_EXECUTION_ID}
             - name: BENCHMARK_GPU_CLASS
               value: ${GPU_CLASS}
             - name: BENCHMARK_ARTIFACT_BUCKET

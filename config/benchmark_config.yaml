@@ -9,6 +9,10 @@ workloads:
     target: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
     modes: [inference]
     batch_sizes: [1, 8, 32]
+  - name: llm_text_generation
+    target: "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+    modes: [inference]
+    batch_sizes: [1, 4, 8]
 
 batch_sizes:
   - 1

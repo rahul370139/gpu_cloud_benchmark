@@ -17,11 +17,12 @@ export KUBECONFIG="${KUBECONFIG_LOCAL}"
 
 load_inventory
 BENCHMARK_RUN_ID="$(jq -r '.benchmark_run_id' "${INVENTORY_FILE}")"
+BENCHMARK_EXECUTION_ID="${BENCHMARK_EXECUTION_ID:-$(date -u '+%Y%m%dT%H%M%SZ')}"
 BENCHMARK_IMAGE="${BENCHMARK_IMAGE:-ghcr.io/example/ml-benchmark:latest}"
 GPU_CLASSES=$(jq -r '.gpu_classes[]' "${INVENTORY_FILE}")
 ARTIFACT_BUCKET_NAME="$(jq -r '.artifact_bucket_name' "${INVENTORY_FILE}")"
 AWS_REGION="$(jq -r '.region' "${INVENTORY_FILE}")"
-ARTIFACTS_DIR="${ROOT_DIR}/artifacts/${BENCHMARK_RUN_ID}"
+ARTIFACTS_DIR="${ROOT_DIR}/artifacts/${BENCHMARK_RUN_ID}/${BENCHMARK_EXECUTION_ID}"
 
 if [[ -z "${GPU_CLASSES}" ]]; then
   echo "No GPU classes found in inventory; is terraform applied?" >&2
@@ -62,6 +63,7 @@ for GPU_CLASS in ${GPU_CLASSES}; do
   GPU_CLASS="${GPU_CLASS}" \
   GPU_CLASS_LOWER="${GPU_CLASS_LOWER}" \
   BENCHMARK_RUN_ID="${BENCHMARK_RUN_ID}" \
+  BENCHMARK_EXECUTION_ID="${BENCHMARK_EXECUTION_ID}" \
   BENCHMARK_IMAGE="${BENCHMARK_IMAGE}" \
   ARTIFACT_BUCKET_NAME="${ARTIFACT_BUCKET_NAME}" \
   AWS_REGION="${AWS_REGION}" \
@@ -97,9 +99,9 @@ if [[ "${EXIT_CODE}" -eq 0 && -n "${ARTIFACT_BUCKET_NAME}" && "${ARTIFACT_BUCKET
   COMPARISON_DIR="${ARTIFACTS_DIR}/comparison"
   mkdir -p "${RESULTS_SYNC_DIR}" "${COMPARISON_DIR}"
 
-  echo "Syncing run artifacts from s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/ ..."
+  echo "Syncing run artifacts from s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/executions/${BENCHMARK_EXECUTION_ID}/ ..."
   aws s3 sync \
-    "s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/" \
+    "s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/executions/${BENCHMARK_EXECUTION_ID}/" \
     "${RESULTS_SYNC_DIR}"
 
   echo "Generating consolidated recommendation..."
@@ -119,7 +121,7 @@ if [[ "${EXIT_CODE}" -eq 0 && -n "${ARTIFACT_BUCKET_NAME}" && "${ARTIFACT_BUCKET
   echo "Uploading consolidated comparison bundle to S3..."
   aws s3 sync \
     "${COMPARISON_DIR}" \
-    "s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/comparison/"
+    "s3://${ARTIFACT_BUCKET_NAME}/benchmark-runs/${BENCHMARK_RUN_ID}/executions/${BENCHMARK_EXECUTION_ID}/comparison/"
 
   echo "Comparison bundle ready in ${COMPARISON_DIR}"
 fi

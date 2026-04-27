@@ -215,3 +215,35 @@ class TestClipImageEmbedding:
         assert meta.name == "clip_image_embedding"
         assert meta.param_count > 0
         assert meta.throughput_unit == "images/sec"
+
+
+class TestLlmTextGeneration:
+    @pytest.fixture
+    def workload_inference(self):
+        register_workload(
+            "llm_text_generation",
+            "user_workloads.llm_text_generation:LlmTextGenerationWorkload",
+        )
+        w = get_workload("llm_text_generation", batch_size=2, device="cpu", mode="inference")
+        w.setup()
+        yield w
+        w.cleanup()
+
+    def test_generate_batch_shape(self, workload_inference):
+        batch = workload_inference.generate_batch()
+        assert batch["input_ids"].shape == (2, 128)
+        assert batch["attention_mask"].shape == (2, 128)
+
+    def test_inference_output_shape(self, workload_inference):
+        batch = workload_inference.generate_batch()
+        output = workload_inference.run_iteration(batch)
+        assert output.shape == (2, 32)
+
+    def test_metadata(self, workload_inference):
+        meta = workload_inference.get_metadata()
+        assert meta.name == "llm_text_generation"
+        assert meta.param_count > 0
+        assert meta.throughput_unit == "tokens/sec"
+
+    def test_samples_per_batch_is_total_tokens(self, workload_inference):
+        assert workload_inference.samples_per_batch() == 2 * (128 + 32)

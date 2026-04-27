@@ -33,16 +33,18 @@ def throughput_bar_chart(df: pd.DataFrame, output_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=FIGSIZE)
 
     chart_df = df.copy()
-    chart_df["label"] = chart_df["workload"] + " (bs=" + chart_df["batch_size"].astype(str) + ")"
+    chart_df["label"] = (
+        chart_df["workload"] + " / " + chart_df["mode"] + " (bs=" + chart_df["batch_size"].astype(str) + ")"
+    )
 
     pivot = chart_df.pivot_table(
         index="gpu_type", columns="label", values="mean_throughput", aggfunc="mean",
     )
     pivot.plot(kind="bar", ax=ax, colormap=PALETTE, edgecolor="white", linewidth=0.5)
 
-    ax.set_ylabel("Throughput (samples/sec)")
+    ax.set_ylabel("Throughput (workload-native units/sec)")
     ax.set_xlabel("GPU Type")
-    ax.set_title("Throughput by GPU and Workload")
+    ax.set_title("Throughput by GPU, Workload, and Mode")
     ax.legend(title="Workload", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=8)
     ax.yaxis.set_major_formatter(ticker.EngFormatter())
     plt.xticks(rotation=0)
@@ -57,17 +59,17 @@ def latency_percentile_plot(df: pd.DataFrame, output_dir: Path) -> Path:
     fig, ax = plt.subplots(figsize=FIGSIZE)
 
     melted = df.melt(
-        id_vars=["gpu_type", "workload", "batch_size"],
+        id_vars=["gpu_type", "workload", "mode", "batch_size"],
         value_vars=["mean_latency_p50", "mean_latency_p95", "mean_latency_p99"],
         var_name="percentile", value_name="latency_ms",
     )
     melted["percentile"] = melted["percentile"].str.replace("mean_latency_", "").str.upper()
-    melted["group"] = melted["gpu_type"] + "\n" + melted["workload"]
+    melted["group"] = melted["gpu_type"] + "\n" + melted["workload"] + " / " + melted["mode"]
 
     sns.barplot(data=melted, x="group", y="latency_ms", hue="percentile", ax=ax, palette="mako")
     ax.set_ylabel("Latency (ms)")
     ax.set_xlabel("")
-    ax.set_title("Latency Percentiles by GPU and Workload")
+    ax.set_title("Latency Percentiles by GPU, Workload, and Mode")
     ax.legend(title="Percentile")
 
     _save(fig, path)
@@ -98,7 +100,7 @@ def throughput_vs_cost_scatter(df: pd.DataFrame, output_dir: Path) -> Path:
             )
 
     ax.set_xlabel("Cost ($/hr)")
-    ax.set_ylabel("Throughput (samples/sec)")
+    ax.set_ylabel("Throughput (workload-native units/sec)")
     ax.set_title("Throughput vs. Cost (bubble size = GPU memory)")
     ax.legend()
     ax.yaxis.set_major_formatter(ticker.EngFormatter())
@@ -118,13 +120,13 @@ def cost_efficiency_bar_chart(df: pd.DataFrame, output_dir: Path) -> Path:
         return path
 
     chart_df = df.copy()
-    chart_df["label"] = chart_df["gpu_type"] + " / " + chart_df["workload"]
+    chart_df["label"] = chart_df["gpu_type"] + " / " + chart_df["workload"] + " / " + chart_df["mode"]
     chart_df = chart_df.sort_values("throughput_per_dollar", ascending=True)
 
     colors = sns.color_palette(PALETTE, len(chart_df))
     ax.barh(chart_df["label"], chart_df["throughput_per_dollar"], color=colors, edgecolor="white")
-    ax.set_xlabel("Throughput per Dollar (samples/$)")
-    ax.set_title("Cost Efficiency Ranking")
+    ax.set_xlabel("Throughput per Dollar (workload-native units/$)")
+    ax.set_title("Cost Efficiency Ranking by Workload and Mode")
     ax.xaxis.set_major_formatter(ticker.EngFormatter())
 
     _save(fig, path)
@@ -163,15 +165,15 @@ def batch_size_scaling_curve(df: pd.DataFrame, output_dir: Path) -> Path:
     path = output_dir / "batch_size_scaling.png"
     fig, ax = plt.subplots(figsize=FIGSIZE)
 
-    for (gpu, wl), group in df.groupby(["gpu_type", "workload"]):
+    for (gpu, wl, mode), group in df.groupby(["gpu_type", "workload", "mode"]):
         sorted_g = group.sort_values("batch_size")
         ax.plot(
             sorted_g["batch_size"], sorted_g["mean_throughput"],
-            marker="o", label=f"{gpu} / {wl}", linewidth=2,
+            marker="o", label=f"{gpu} / {wl} / {mode}", linewidth=2,
         )
 
     ax.set_xlabel("Batch Size")
-    ax.set_ylabel("Throughput (samples/sec)")
+    ax.set_ylabel("Throughput (workload-native units/sec)")
     ax.set_title("Throughput Scaling with Batch Size")
     ax.legend(fontsize=8)
     ax.yaxis.set_major_formatter(ticker.EngFormatter())

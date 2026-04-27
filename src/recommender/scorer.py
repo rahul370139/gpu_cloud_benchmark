@@ -20,6 +20,12 @@ DEFAULT_WEIGHTS = {
 }
 
 
+def _throughput_quantity_unit(unit: str) -> str:
+    if not unit:
+        return "samples"
+    return unit[:-4] if unit.endswith("/sec") else unit
+
+
 @dataclass
 class GpuScore:
     gpu_type: str
@@ -62,7 +68,7 @@ def _build_reasoning(row: pd.Series, rank: int, total: int) -> tuple[str, list[s
 
     if row.get("cost_per_hour", 0) > 0:
         tpd = row.get("throughput_per_dollar", 0)
-        tu = row.get("throughput_unit", "samples")
+        tu = _throughput_quantity_unit(row.get("throughput_unit", "samples"))
         lines.append(f"Throughput-per-dollar: {tpd:,.0f} {tu}/$")
 
     lat = row.get("latency_p95_ms", row.get("mean_latency_p95", 0))

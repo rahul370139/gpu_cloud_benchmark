@@ -443,6 +443,70 @@ class TestEngine:
         assert count == 1
         assert engine.history.get_run_count() == 1
 
+    def test_recommend_mixed_suite_returns_workload_recommendations(self, tmp_path):
+        results_dir = tmp_path / "results"
+        results_dir.mkdir()
+        df = pd.DataFrame([
+            {"gpu_type": "T4", "workload": "resnet50", "mode": "inference",
+             "batch_size": 32, "throughput": 90.0, "latency_p50_ms": 4.0,
+             "latency_p95_ms": 5.0, "latency_p99_ms": 6.0, "latency_mean_ms": 4.5,
+             "latency_std_ms": 0.5, "avg_gpu_utilization_pct": 70.0,
+             "avg_gpu_memory_used_mb": 4000.0, "throughput_unit": "images/sec",
+             "model_name": "ResNet-50", "param_count": 25_600_000,
+             "repeat": 1, "seed": 42},
+            {"gpu_type": "A100", "workload": "resnet50", "mode": "inference",
+             "batch_size": 32, "throughput": 100.0, "latency_p50_ms": 9.0,
+             "latency_p95_ms": 10.0, "latency_p99_ms": 11.0, "latency_mean_ms": 9.5,
+             "latency_std_ms": 0.5, "avg_gpu_utilization_pct": 65.0,
+             "avg_gpu_memory_used_mb": 5000.0, "throughput_unit": "images/sec",
+             "model_name": "ResNet-50", "param_count": 25_600_000,
+             "repeat": 1, "seed": 42},
+            {"gpu_type": "T4", "workload": "bert_base", "mode": "inference",
+             "batch_size": 8, "throughput": 1000.0, "latency_p50_ms": 18.0,
+             "latency_p95_ms": 20.0, "latency_p99_ms": 22.0, "latency_mean_ms": 19.0,
+             "latency_std_ms": 1.0, "avg_gpu_utilization_pct": 80.0,
+             "avg_gpu_memory_used_mb": 6000.0, "throughput_unit": "tokens/sec",
+             "model_name": "BERT-base", "param_count": 109_500_000,
+             "repeat": 1, "seed": 42},
+            {"gpu_type": "A100", "workload": "bert_base", "mode": "inference",
+             "batch_size": 8, "throughput": 5000.0, "latency_p50_ms": 1.0,
+             "latency_p95_ms": 2.0, "latency_p99_ms": 3.0, "latency_mean_ms": 1.5,
+             "latency_std_ms": 0.2, "avg_gpu_utilization_pct": 75.0,
+             "avg_gpu_memory_used_mb": 9000.0, "throughput_unit": "tokens/sec",
+             "model_name": "BERT-base", "param_count": 109_500_000,
+             "repeat": 1, "seed": 42},
+        ])
+        df.to_csv(results_dir / "benchmark_summary_mix.csv", index=False)
+
+        config_path = tmp_path / "rec_config.yaml"
+        config_path.write_text("{}")
+        cost_path = tmp_path / "cost_rates.yaml"
+        cost_path.write_text(
+            "gpu_rates:\n"
+            "  T4:\n"
+            "    cost_per_hour: 1.0\n"
+            "    gpu_memory_gb: 16\n"
+            "  A100:\n"
+            "    cost_per_hour: 2.0\n"
+            "    gpu_memory_gb: 40\n"
+        )
+
+        engine = RecommendationEngine(
+            config_path=str(config_path),
+            cost_rates_path=str(cost_path),
+            history_db_path=str(tmp_path / "mix.db"),
+        )
+
+        result = engine.recommend(results_dir=str(results_dir))
+        assert result["status"] == "ok"
+        assert result["recommendation_scope"] == "mixed_suite"
+        assert result["recommended_gpu"] is None
+        assert result["rankings"] == []
+        assert len(result["workload_recommendations"]) == 2
+        per_workload = {item["workload"]: item for item in result["workload_recommendations"]}
+        assert per_workload["resnet50"]["recommended_gpu"] == "T4"
+        assert per_workload["bert_base"]["recommended_gpu"] == "A100"
+
 
 # ======================================================================
 # Format / Output Tests
@@ -498,3 +562,40 @@ class TestFormatRecommendation:
         text = format_recommendation(result)
         assert "Excluded by constraints" in text
         assert "A100" in text
+
+    def test_format_mixed_suite_result(self):
+        result = {
+            "status": "ok",
+            "source": "benchmark",
+            "recommended_gpu": None,
+            "composite_score": None,
+            "constraints_applied": "none",
+            "recommendation_scope": "mixed_suite",
+            "summary_note": "Use the workload-level recommendations instead of a single global GPU choice.",
+            "composite_score_explanation": "Composite score is normalized within each comparison set.",
+            "workload_recommendations": [
+                {
+                    "workload": "example_mlp",
+                    "mode": "training",
+                    "recommended_gpu": "T4",
+                    "avg_composite_score": 0.8123,
+                    "batch_sizes_evaluated": [1, 8, 32],
+                    "scenario_wins": 3,
+                    "throughput_wins": 1,
+                    "value_wins": 3,
+                    "latency_wins": 1,
+                    "scenarios_total": 3,
+                    "mean_throughput_per_dollar_across_batch_sizes": 12345.0,
+                    "median_latency_p95_ms": 4.2,
+                    "throughput_unit": "samples/sec",
+                }
+            ],
+            "rankings": [],
+            "excluded": [],
+            "history_stats": {"total_runs": 5, "gpus_benchmarked": 2, "workloads_benchmarked": 2},
+        }
+        text = format_recommendation(result)
+        assert "Workload-Level Recommendations" in text
+        assert "example_mlp / training" in text
+        assert "Recommended GPU : T4" in text
+        assert "Scenario Wins" in text

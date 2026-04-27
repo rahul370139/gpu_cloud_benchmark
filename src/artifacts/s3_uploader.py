@@ -19,12 +19,15 @@ def _normalize(value: str | None) -> str | None:
 
 def _build_prefix(
     run_id: str | None,
+    execution_id: str | None,
     gpu_class: str | None,
     pod_name: str | None,
 ) -> str:
     parts = ["benchmark-runs"]
     if run_id:
         parts.append(run_id)
+    if execution_id:
+        parts.extend(["executions", execution_id])
     if gpu_class:
         parts.append(gpu_class)
     if pod_name:
@@ -70,6 +73,7 @@ def maybe_upload_results(
     bucket: str | None = None,
     region: str | None = None,
     run_id: str | None = None,
+    execution_id: str | None = None,
     gpu_class: str | None = None,
     pod_name: str | None = None,
 ) -> list[str]:
@@ -82,10 +86,16 @@ def maybe_upload_results(
 
     region = _normalize(region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION"))
     run_id = _normalize(run_id or os.environ.get("BENCHMARK_RUN_ID"))
+    execution_id = _normalize(execution_id or os.environ.get("BENCHMARK_EXECUTION_ID"))
     gpu_class = _normalize(gpu_class or os.environ.get("BENCHMARK_GPU_CLASS"))
     pod_name = _normalize(pod_name or os.environ.get("POD_NAME"))
 
-    prefix = _build_prefix(run_id=run_id, gpu_class=gpu_class, pod_name=pod_name)
+    prefix = _build_prefix(
+        run_id=run_id,
+        execution_id=execution_id,
+        gpu_class=gpu_class,
+        pod_name=pod_name,
+    )
     uploaded = upload_directory_to_s3(
         results_dir=results_dir,
         bucket=bucket,
@@ -107,6 +117,7 @@ def main() -> None:
     parser.add_argument("--bucket", default=None)
     parser.add_argument("--region", default=None)
     parser.add_argument("--run-id", default=None)
+    parser.add_argument("--execution-id", default=None)
     parser.add_argument("--gpu-class", default=None)
     parser.add_argument("--pod-name", default=None)
     args = parser.parse_args()
@@ -120,6 +131,7 @@ def main() -> None:
         bucket=args.bucket,
         region=args.region,
         run_id=args.run_id,
+        execution_id=args.execution_id,
         gpu_class=args.gpu_class,
         pod_name=args.pod_name,
     )
