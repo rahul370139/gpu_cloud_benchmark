@@ -1,0 +1,401 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "GPU Cloud Benchmark — live throughput / latency / GPU utilization across A10G, T4, and NVIDIA_GB10. Pulls from the Prometheus instance backed by the project Pushgateway.",
+  "editable": true,
+  "graphTooltip": 1,
+  "title": "GPU Cloud Benchmark — Live Cross-Cloud View",
+  "uid": "gpu-bench-cross-cloud",
+  "version": 1,
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s",
+  "tags": ["gpu", "benchmark", "ml"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
+        "hide": 0
+      },
+      {
+        "name": "gpu_type",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "label": "GPU class",
+        "query": "label_values(benchmark_throughput, gpu_type)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "workload",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "label": "Workload",
+        "query": "label_values(benchmark_throughput{gpu_type=~\"$gpu_type\"}, workload)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "batch_size",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
+        "label": "Batch size",
+        "query": "label_values(benchmark_throughput{gpu_type=~\"$gpu_type\",workload=~\"$workload\"}, batch_size)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Latest throughput by GPU class",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 100 },
+              { "color": "green", "value": 1000 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (gpu_type) (benchmark_throughput{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"})",
+          "legendFormat": "{{gpu_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Latest P95 latency",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 8, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "max by (gpu_type) (benchmark_latency_p95_ms{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"})",
+          "legendFormat": "{{gpu_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Avg GPU utilization",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 0 },
+      "options": {
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "area",
+        "textMode": "value_and_name"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 40 },
+              { "color": "green", "value": 70 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "avg by (gpu_type) (benchmark_gpu_utilization_pct{gpu_type=~\"$gpu_type\",workload=~\"$workload\"})",
+          "legendFormat": "{{gpu_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Throughput over time (per workload × GPU class)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        }
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        {
+          "expr": "benchmark_throughput{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "legendFormat": "{{gpu_type}} · {{workload}} · bs={{batch_size}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Latency P50 / P95 / P99",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 5,
+            "showPoints": "never"
+          }
+        }
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["last", "max"] } },
+      "targets": [
+        {
+          "expr": "benchmark_latency_p50_ms{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "legendFormat": "p50 · {{gpu_type}} · {{workload}}",
+          "refId": "A"
+        },
+        {
+          "expr": "benchmark_latency_p95_ms{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "legendFormat": "p95 · {{gpu_type}} · {{workload}}",
+          "refId": "B"
+        },
+        {
+          "expr": "benchmark_latency_p99_ms{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "legendFormat": "p99 · {{gpu_type}} · {{workload}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "GPU utilization %",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        }
+      },
+      "targets": [
+        {
+          "expr": "benchmark_gpu_utilization_pct{gpu_type=~\"$gpu_type\",workload=~\"$workload\"}",
+          "legendFormat": "{{gpu_type}} · {{workload}} · bs={{batch_size}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "GPU memory used (MB)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "fieldConfig": { "defaults": { "unit": "decmbytes" } },
+      "targets": [
+        {
+          "expr": "benchmark_gpu_memory_used_mb{gpu_type=~\"$gpu_type\",workload=~\"$workload\"}",
+          "legendFormat": "{{gpu_type}} · {{workload}} · bs={{batch_size}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "table",
+      "title": "Scoreboard — last value per (gpu × workload × bs)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 22 },
+      "options": { "showHeader": true },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*p95.*" },
+            "properties": [{ "id": "unit", "value": "ms" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "throughput" },
+            "properties": [{ "id": "unit", "value": "short" }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "gpu_util_pct" },
+            "properties": [{ "id": "unit", "value": "percent" }]
+          }
+        ]
+      },
+      "transformations": [
+        { "id": "merge", "options": {} },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "gpu_type": 0,
+              "workload": 1,
+              "batch_size": 2,
+              "Value #throughput": 3,
+              "Value #p95": 4,
+              "Value #util": 5
+            },
+            "renameByName": {
+              "Value #throughput": "throughput",
+              "Value #p95": "p95",
+              "Value #util": "gpu_util_pct"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "expr": "benchmark_throughput{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "throughput"
+        },
+        {
+          "expr": "benchmark_latency_p95_ms{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "p95"
+        },
+        {
+          "expr": "benchmark_gpu_utilization_pct{gpu_type=~\"$gpu_type\",workload=~\"$workload\",batch_size=~\"$batch_size\"}",
+          "format": "table",
+          "instant": true,
+          "refId": "util"
+        }
+      ]
+    }
+  ]
+}

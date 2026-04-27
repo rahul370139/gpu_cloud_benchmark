@@ -1,0 +1,336 @@
+{
+  "history_summary": {
+    "total_runs": 173,
+    "gpus_benchmarked": 4,
+    "workloads_benchmarked": 5,
+    "distinct_gpus": [
+      "A10G",
+      "CPU",
+      "NVIDIA_GB10",
+      "T4"
+    ],
+    "distinct_workloads": [
+      "bert_base",
+      "clip_image_embedding",
+      "example_mlp",
+      "llm_text_generation",
+      "resnet50"
+    ]
+  },
+  "evaluations": [
+    {
+      "workload": "resnet50",
+      "query": {
+        "param_count": 25557032,
+        "batch_size": 32,
+        "mode": "inference",
+        "family": "vision"
+      },
+      "actual_winner": "A10G",
+      "predicted_winner": "A10G",
+      "winner_match": true,
+      "predicted_top_throughput": 4314.35,
+      "actual_top_throughput": 946.7,
+      "per_gpu": [
+        {
+          "gpu_type": "A10G",
+          "predicted_throughput": 4314.35,
+          "actual_throughput": 946.7,
+          "throughput_pct_err": 355.73,
+          "predicted_latency_p95_ms": 51.7212,
+          "actual_latency_p95_ms": 33.845,
+          "latency_pct_err": 52.82,
+          "confidence": 0.8182,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "llm_text_generation",
+            "clip_image_embedding"
+          ]
+        },
+        {
+          "gpu_type": "T4",
+          "predicted_throughput": 3385.96,
+          "actual_throughput": 366.85,
+          "throughput_pct_err": 822.98,
+          "predicted_latency_p95_ms": 81.5436,
+          "actual_latency_p95_ms": 88.555,
+          "latency_pct_err": 7.92,
+          "confidence": 0.8182,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "llm_text_generation",
+            "clip_image_embedding"
+          ]
+        },
+        {
+          "gpu_type": "NVIDIA_GB10",
+          "predicted_throughput": 1421.67,
+          "actual_throughput": 496.32,
+          "throughput_pct_err": 186.44,
+          "predicted_latency_p95_ms": 24.0943,
+          "actual_latency_p95_ms": 67.1587,
+          "latency_pct_err": 64.12,
+          "confidence": 0.8206,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "clip_image_embedding",
+            "clip_image_embedding"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "bert_base",
+      "query": {
+        "param_count": 109482240,
+        "batch_size": 32,
+        "mode": "inference",
+        "family": "nlp"
+      },
+      "actual_winner": "A10G",
+      "predicted_winner": "A10G",
+      "winner_match": true,
+      "predicted_top_throughput": 1518.33,
+      "actual_top_throughput": 101719.9,
+      "per_gpu": [
+        {
+          "gpu_type": "A10G",
+          "predicted_throughput": 1518.33,
+          "actual_throughput": 101719.9,
+          "throughput_pct_err": 98.51,
+          "predicted_latency_p95_ms": 34.9794,
+          "actual_latency_p95_ms": 161.185,
+          "latency_pct_err": 78.3,
+          "confidence": 0.8889,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "resnet50",
+            "resnet50"
+          ]
+        },
+        {
+          "gpu_type": "NVIDIA_GB10",
+          "predicted_throughput": 1421.67,
+          "actual_throughput": 46463.6,
+          "throughput_pct_err": 96.94,
+          "predicted_latency_p95_ms": 24.0943,
+          "actual_latency_p95_ms": 356.8146,
+          "latency_pct_err": 93.25,
+          "confidence": 0.9735,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "clip_image_embedding",
+            "clip_image_embedding"
+          ]
+        },
+        {
+          "gpu_type": "T4",
+          "predicted_throughput": 353.94,
+          "actual_throughput": 19249.75,
+          "throughput_pct_err": 98.16,
+          "predicted_latency_p95_ms": 130.3573,
+          "actual_latency_p95_ms": 855.865,
+          "latency_pct_err": 84.77,
+          "confidence": 0.8889,
+          "similar_workloads": [
+            "clip_image_embedding",
+            "resnet50",
+            "resnet50"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "example_mlp",
+      "query": {
+        "param_count": 34052,
+        "batch_size": 32,
+        "mode": "inference",
+        "family": "tabular"
+      },
+      "actual_winner": "NVIDIA_GB10",
+      "predicted_winner": "NVIDIA_GB10",
+      "winner_match": true,
+      "predicted_top_throughput": 2359.01,
+      "actual_top_throughput": 387732.58,
+      "per_gpu": [
+        {
+          "gpu_type": "NVIDIA_GB10",
+          "predicted_throughput": 2359.01,
+          "actual_throughput": 387732.58,
+          "throughput_pct_err": 99.39,
+          "predicted_latency_p95_ms": 74.2207,
+          "actual_latency_p95_ms": 0.1512,
+          "latency_pct_err": 48976.95,
+          "confidence": 0.3536,
+          "similar_workloads": [
+            "llm_text_generation",
+            "llm_text_generation",
+            "llm_text_generation"
+          ]
+        },
+        {
+          "gpu_type": "T4",
+          "predicted_throughput": 534.46,
+          "actual_throughput": 274708.9,
+          "throughput_pct_err": 99.81,
+          "predicted_latency_p95_ms": 47.1343,
+          "actual_latency_p95_ms": 0.16,
+          "latency_pct_err": 29358.94,
+          "confidence": 0.3466,
+          "similar_workloads": [
+            "llm_text_generation",
+            "resnet50",
+            "resnet50"
+          ]
+        },
+        {
+          "gpu_type": "A10G",
+          "predicted_throughput": 526.59,
+          "actual_throughput": 288171.9,
+          "throughput_pct_err": 99.82,
+          "predicted_latency_p95_ms": 48.0028,
+          "actual_latency_p95_ms": 0.15,
+          "latency_pct_err": 31901.87,
+          "confidence": 0.3466,
+          "similar_workloads": [
+            "llm_text_generation",
+            "resnet50",
+            "resnet50"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "clip_image_embedding",
+      "query": {
+        "param_count": 87849217,
+        "batch_size": 8,
+        "mode": "inference",
+        "family": "vision"
+      },
+      "actual_winner": "A10G",
+      "predicted_winner": "A10G",
+      "winner_match": true,
+      "predicted_top_throughput": 84416.73,
+      "actual_top_throughput": 1139.0,
+      "per_gpu": [
+        {
+          "gpu_type": "A10G",
+          "predicted_throughput": 84416.73,
+          "actual_throughput": 1139.0,
+          "throughput_pct_err": 7311.48,
+          "predicted_latency_p95_ms": 58.2253,
+          "actual_latency_p95_ms": 7.04,
+          "latency_pct_err": 727.06,
+          "confidence": 0.9351,
+          "similar_workloads": [
+            "bert_base",
+            "bert_base",
+            "bert_base"
+          ]
+        },
+        {
+          "gpu_type": "NVIDIA_GB10",
+          "predicted_throughput": 47637.13,
+          "actual_throughput": 1072.06,
+          "throughput_pct_err": 4343.51,
+          "predicted_latency_p95_ms": 89.3147,
+          "actual_latency_p95_ms": 8.3575,
+          "latency_pct_err": 968.68,
+          "confidence": 0.9703,
+          "similar_workloads": [
+            "bert_base",
+            "bert_base",
+            "bert_base"
+          ]
+        },
+        {
+          "gpu_type": "T4",
+          "predicted_throughput": 18883.41,
+          "actual_throughput": 322.9,
+          "throughput_pct_err": 5748.07,
+          "predicted_latency_p95_ms": 254.865,
+          "actual_latency_p95_ms": 25.03,
+          "latency_pct_err": 918.24,
+          "confidence": 0.9351,
+          "similar_workloads": [
+            "bert_base",
+            "bert_base",
+            "bert_base"
+          ]
+        }
+      ]
+    },
+    {
+      "workload": "llm_text_generation",
+      "query": {
+        "param_count": 23631360,
+        "batch_size": 4,
+        "mode": "inference",
+        "family": "generative"
+      },
+      "actual_winner": "NVIDIA_GB10",
+      "predicted_winner": "A10G",
+      "winner_match": false,
+      "predicted_top_throughput": 629.74,
+      "actual_top_throughput": 9201.42,
+      "per_gpu": [
+        {
+          "gpu_type": "A10G",
+          "predicted_throughput": 629.74,
+          "actual_throughput": 5018.2,
+          "throughput_pct_err": 87.45,
+          "predicted_latency_p95_ms": 12.9848,
+          "actual_latency_p95_ms": 129.1,
+          "latency_pct_err": 89.94,
+          "confidence": 0.8838,
+          "similar_workloads": [
+            "resnet50",
+            "resnet50",
+            "resnet50"
+          ]
+        },
+        {
+          "gpu_type": "NVIDIA_GB10",
+          "predicted_throughput": 474.36,
+          "actual_throughput": 9201.42,
+          "throughput_pct_err": 94.84,
+          "predicted_latency_p95_ms": 17.9935,
+          "actual_latency_p95_ms": 75.1782,
+          "latency_pct_err": 76.07,
+          "confidence": 0.8935,
+          "similar_workloads": [
+            "resnet50",
+            "resnet50",
+            "resnet50"
+          ]
+        },
+        {
+          "gpu_type": "T4",
+          "predicted_throughput": 234.82,
+          "actual_throughput": 4924.2,
+          "throughput_pct_err": 95.23,
+          "predicted_latency_p95_ms": 27.2783,
+          "actual_latency_p95_ms": 132.4,
+          "latency_pct_err": 79.4,
+          "confidence": 0.8838,
+          "similar_workloads": [
+            "resnet50",
+            "resnet50",
+            "resnet50"
+          ]
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "evaluated_workloads": 5,
+    "winner_match_count": 4,
+    "winner_match_rate": 0.8,
+    "median_throughput_pct_err": 99.81,
+    "mean_throughput_pct_err": 1309.22,
+    "median_latency_pct_err": 89.94,
+    "mean_latency_pct_err": 7565.22
+  }
+}

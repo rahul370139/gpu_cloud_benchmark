@@ -1,0 +1,9 @@
+workload,model_name,param_count,mode,batch_size,input_shape,throughput_unit,device,benchmark_iters,warmup_iters,total_time_sec,throughput,latency_p50_ms,latency_p95_ms,latency_p99_ms,latency_mean_ms,latency_std_ms,avg_gpu_utilization_pct,avg_gpu_memory_used_mb,seed,timing_method,gpu_type,repeat
+resnet50,ResNet-50,25557032,inference,1,"(1, 3, 224, 224)",images/sec,cpu,5,2,0.1122,44.55,21.9753,24.0318,24.333,22.4449,1.0324,0.0,0.0,42,wall_clock,CPU,1
+resnet50,ResNet-50,25557032,inference,8,"(8, 3, 224, 224)",images/sec,cpu,5,2,0.736,54.35,146.5815,151.8083,152.7171,147.1989,3.0652,0.0,0.0,42,wall_clock,CPU,1
+bert_base,BERT-base-uncased,109482240,inference,1,"(1, 512)",tokens/sec,cpu,5,2,0.7281,3516.21,146.2313,150.9869,151.667,145.6112,4.318,0.0,0.0,42,wall_clock,CPU,1
+bert_base,BERT-base-uncased,109482240,inference,8,"(8, 512)",tokens/sec,cpu,5,2,4.9971,4098.34,954.8681,1146.2248,1184.3708,999.4293,97.3715,0.0,0.0,42,wall_clock,CPU,1
+example_mlp,Example-MLP,34052,inference,1,"(1, 128)",samples/sec,cpu,5,2,0.0001,78025.02,0.0123,0.0152,0.0157,0.0128,0.0016,0.0,0.0,42,wall_clock,CPU,1
+example_mlp,Example-MLP,34052,inference,8,"(8, 128)",samples/sec,cpu,5,2,0.0001,401840.56,0.0197,0.0233,0.0237,0.0199,0.0025,0.0,0.0,42,wall_clock,CPU,1
+clip_image_embedding,CLIP-ViT Image Encoder,87849216,inference,1,"(1, 3, 224, 224)",images/sec,cpu,5,2,0.1372,36.43,26.9385,28.9137,29.0349,27.4464,1.0727,0.0,0.0,42,wall_clock,CPU,1
+llm_text_generation,Synthetic GPT Decoder,23240704,inference,1,"(1, 128)",tokens/sec,cpu,5,2,0.4507,1774.84,90.039,90.8275,90.9053,90.1488,0.5145,0.0,0.0,42,wall_clock,CPU,1

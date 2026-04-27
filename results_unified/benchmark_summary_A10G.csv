@@ -1,0 +1,31 @@
+workload,model_name,param_count,mode,batch_size,input_shape,throughput_unit,device,benchmark_iters,warmup_iters,total_time_sec,throughput,latency_p50_ms,latency_p95_ms,latency_p99_ms,latency_mean_ms,latency_std_ms,avg_gpu_utilization_pct,avg_gpu_memory_used_mb,seed,timing_method,gpu_type,repeat
+bert_base,BERT-base,109482240,inference,1,"(1, 512)",tokens/sec,cuda,100,10,0.0,65068.8,7.86,7.9,8.23,7.86,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,inference,8,"(8, 512)",tokens/sec,cuda,100,10,0.0,91171.5,44.92,44.96,45.06,44.92,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,inference,32,"(32, 512)",tokens/sec,cuda,100,10,0.0,101720.5,161.06,161.16,161.27,161.06,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,inference,64,"(64, 512)",tokens/sec,cuda,100,10,0.0,103653.8,316.12,316.31,316.35,316.12,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,training,1,"(1, 512)",tokens/sec,cuda,100,10,0.0,10770.7,47.5,48.1,48.58,47.5,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,training,8,"(8, 512)",tokens/sec,cuda,100,10,0.0,22915.4,178.74,178.82,178.89,178.74,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,training,32,"(32, 512)",tokens/sec,cuda,100,10,0.0,27379.0,598.41,598.56,598.6,598.41,0.0,0.0,0.0,42,cuda_event,A10G,1
+bert_base,BERT-base,109482240,training,64,"(64, 512)",tokens/sec,cuda,100,10,0.0,28311.3,1157.41,1157.64,1157.74,1157.41,0.0,0.0,0.0,42,cuda_event,A10G,1
+clip_image_embedding,CLIP-ViT Image Encoder,87849217,inference,1,"(1, 3, 224, 224)",images/sec,cuda,100,10,0.0,163.4,6.11,6.27,6.49,6.11,0.0,0.0,0.0,42,cuda_event,A10G,1
+clip_image_embedding,CLIP-ViT Image Encoder,87849217,inference,8,"(8, 3, 224, 224)",images/sec,cuda,100,10,0.0,1139.0,7.02,7.04,7.05,7.02,0.0,0.0,0.0,42,cuda_event,A10G,1
+clip_image_embedding,CLIP-ViT Image Encoder,87849217,inference,32,"(32, 3, 224, 224)",images/sec,cuda,100,10,0.0,1824.6,17.54,17.55,17.56,17.54,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,inference,1,"(1, 128)",samples/sec,cuda,100,10,0.0,8962.1,0.1,0.15,0.18,0.1,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,inference,8,"(8, 128)",samples/sec,cuda,100,10,0.0,71855.1,0.1,0.15,0.18,0.1,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,inference,32,"(32, 128)",samples/sec,cuda,100,10,0.0,288171.9,0.1,0.15,0.19,0.1,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,inference,64,"(64, 128)",samples/sec,cuda,100,10,0.0,553096.6,0.11,0.14,0.18,0.11,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,training,1,"(1, 128)",samples/sec,cuda,100,10,0.0,1090.0,0.91,0.97,1.18,0.91,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,training,8,"(8, 128)",samples/sec,cuda,100,10,0.0,9006.6,0.88,0.94,1.06,0.88,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,training,32,"(32, 128)",samples/sec,cuda,100,10,0.0,35819.9,0.88,0.94,1.08,0.88,0.0,0.0,0.0,42,cuda_event,A10G,1
+example_mlp,Example-MLP,34052,training,64,"(64, 128)",samples/sec,cuda,100,10,0.0,70317.2,0.91,0.97,1.07,0.91,0.0,0.0,0.0,42,cuda_event,A10G,1
+llm_text_generation,Synthetic GPT Decoder,23631360,inference,1,"(1, 128)",tokens/sec,cuda,100,10,0.0,1260.4,127.02,129.55,131.13,127.02,0.0,0.0,0.0,42,cuda_event,A10G,1
+llm_text_generation,Synthetic GPT Decoder,23631360,inference,4,"(4, 128)",tokens/sec,cuda,100,10,0.0,5018.2,127.51,129.1,130.42,127.51,0.0,0.0,0.0,42,cuda_event,A10G,1
+llm_text_generation,Synthetic GPT Decoder,23631360,inference,8,"(8, 128)",tokens/sec,cuda,100,10,0.0,9985.8,128.1,130.65,132.89,128.1,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,inference,1,"(1, 3, 224, 224)",images/sec,cuda,100,10,0.0,153.7,6.45,6.93,7.16,6.45,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,inference,8,"(8, 3, 224, 224)",images/sec,cuda,100,10,0.0,858.5,9.32,9.33,9.34,9.32,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,inference,32,"(32, 3, 224, 224)",images/sec,cuda,100,10,0.0,946.7,33.8,33.83,33.84,33.8,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,inference,64,"(64, 3, 224, 224)",images/sec,cuda,100,10,0.0,970.3,65.96,66.0,66.02,65.96,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,training,1,"(1, 3, 224, 224)",images/sec,cuda,100,10,0.0,46.2,21.63,22.31,22.89,21.63,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,training,8,"(8, 3, 224, 224)",images/sec,cuda,100,10,0.0,265.4,30.14,30.19,30.3,30.14,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,training,32,"(32, 3, 224, 224)",images/sec,cuda,100,10,0.0,307.9,103.92,104.0,104.06,103.92,0.0,0.0,0.0,42,cuda_event,A10G,1
+resnet50,ResNet-50,25557032,training,64,"(64, 3, 224, 224)",images/sec,cuda,100,10,0.0,314.4,203.58,203.66,203.73,203.58,0.0,0.0,0.0,42,cuda_event,A10G,1

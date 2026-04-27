@@ -1,0 +1,84 @@
+{
+  "gpu_type": "CPU",
+  "device": "cpu",
+  "config": {
+    "custom_workloads": {
+      "example_mlp": "user_workloads.example_mlp:ExampleMLPWorkload",
+      "clip_image_embedding": "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload",
+      "llm_text_generation": "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+    },
+    "workloads": [
+      "resnet50",
+      "bert_base",
+      "example_mlp",
+      {
+        "name": "clip_image_embedding",
+        "target": "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload",
+        "modes": [
+          "inference"
+        ],
+        "batch_sizes": [
+          1
+        ]
+      },
+      {
+        "name": "llm_text_generation",
+        "target": "user_workloads.llm_text_generation:LlmTextGenerationWorkload",
+        "modes": [
+          "inference"
+        ],
+        "batch_sizes": [
+          1
+        ]
+      }
+    ],
+    "batch_sizes": [
+      1,
+      8
+    ],
+    "num_repeats": 1,
+    "warmup_iters": 2,
+    "benchmark_iters": 5,
+    "seed": 42,
+    "modes": [
+      "inference"
+    ],
+    "output_dir": "results_cpu/",
+    "prometheus_pushgateway": ""
+  },
+  "custom_workloads": {
+    "example_mlp": "user_workloads.example_mlp:ExampleMLPWorkload",
+    "clip_image_embedding": "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload",
+    "llm_text_generation": "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+  },
+  "environment": {
+    "timestamp_utc": "2026-04-27T04:19:28.876687+00:00",
+    "hostname": "Rahuls-MacBook-Pro-7.local",
+    "os": "Darwin 25.1.0",
+    "python_version": "3.12.5",
+    "torch_version": "2.4.0",
+    "cuda_version": "NO_CUDA",
+    "cudnn_version": "UNAVAILABLE",
+    "nvidia_driver_version": "UNAVAILABLE",
+    "gpu_name": "NO_GPU",
+    "gpu_count": 0,
+    "docker_container_id": "Rahuls-MacBook-Pro-7.local",
+    "pip_freeze_sha256": "a7b75427be66fb8aa23b3fb3f059001094ac600f49a08af3c68229f09130d8ec",
+    "pip_freeze": "brotli==1.2.0\ncertifi==2026.4.22\ncffi==2.0.0\ncharset-normalizer==3.4.7\ncontourpy==1.3.3\ncssselect2==0.9.0\ncycler==0.12.1\nfilelock==3.29.0\nfonttools==4.62.1\nfsspec==2026.3.0\nhf-xet==1.4.3\nhtml5lib==1.1\nhuggingface_hub==0.36.2\nidna==3.13\niniconfig==2.3.0\nJinja2==3.1.4\nkiwisolver==1.5.0\nMarkupSafe==3.0.3\nmatplotlib==3.9.1\nmpmath==1.3.0\nnetworkx==3.6.1\nnumpy==1.26.4\npackaging==26.2\npandas==2.2.2\npillow==12.2.0\npluggy==1.6.0\nprometheus_client==0.21.0\npycparser==3.0\npydyf==0.12.1\npynvml==11.5.0\npyparsing==3.3.2\npyphen==0.17.2\npytest==8.3.2\npython-dateutil==2.9.0.post0\npytz==2026.1.post1\nPyYAML==6.0.1\nregex==2026.4.4\nrequests==2.33.1\nsafetensors==0.7.0\nseaborn==0.13.2\nsetuptools==82.0.1\nsix==1.17.0\nsympy==1.14.0\ntinycss2==1.5.1\ntokenizers==0.19.1\ntorch==2.4.0\ntorchvision==0.19.0\ntqdm==4.67.3\ntransformers==4.44.0\ntyping_extensions==4.15.0\ntzdata==2026.2\nurllib3==2.6.3\nweasyprint==62.3\nwebencodings==0.5.1\nzopfli==0.4.1",
+    "nvidia_container_runtime": "NOT_SET"
+  },
+  "total_runs": 8,
+  "successful_runs": 8,
+  "failed_runs": 0,
+  "result_checksums": {
+    "CPU_bert_base_inference_bs1_r1_latencies.csv": "e6390c0bcb59e8cd6abf2a454a37fbae52443a2e765c4eb26f91f50f923d57a0",
+    "CPU_bert_base_inference_bs8_r1_latencies.csv": "bb3adb257081f50524b3131b65e6e8b12aa2101159a6d3f8a46a007827884d74",
+    "CPU_clip_image_embedding_inference_bs1_r1_latencies.csv": "02340d92ba1f6af5bbd700a707b5cd68574e8d500eebbf52fedecac73f1d2b9f",
+    "CPU_example_mlp_inference_bs1_r1_latencies.csv": "fb742a6626c4908d0f7a13781315c880f63b458b4d1a66f67a9238416d285a90",
+    "CPU_example_mlp_inference_bs8_r1_latencies.csv": "0407eed233998ef7870b95d960f17a11ceb9a272d9b09caa8d8cd5ae67d8d60d",
+    "CPU_llm_text_generation_inference_bs1_r1_latencies.csv": "8bf22f76b8ce7f46f9d3b5f33c332e508af8f10974ce874a75c0c4ce99d1ed53",
+    "CPU_resnet50_inference_bs1_r1_latencies.csv": "112dafc84bf7e0749983e6ba7de4803b5f1d0c3f6115249c755c8aafd6120414",
+    "CPU_resnet50_inference_bs8_r1_latencies.csv": "f9574b85701d76b77cdb2f6fb9cbcd4564ec586e63f20d9ca1bdee8703705c83",
+    "benchmark_summary_CPU.csv": "4d09de0dafd7c27d14d81cec587261283eef587b0358b0f06cd7952057164810"
+  }
+}

@@ -1,0 +1,38 @@
+# CPU smoke profile for all 5 workloads — small batches, few iters
+# Used to demonstrate that the recommendation engine sees CPU as another
+# device class alongside DGX/A10G/T4 and to feed a CPU baseline into history.
+
+custom_workloads:
+  example_mlp: "user_workloads.example_mlp:ExampleMLPWorkload"
+  clip_image_embedding: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
+  llm_text_generation: "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+
+workloads:
+  - resnet50
+  - bert_base
+  - example_mlp
+  - name: clip_image_embedding
+    target: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
+    modes: [inference]
+    batch_sizes: [1]
+  - name: llm_text_generation
+    target: "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+    modes: [inference]
+    batch_sizes: [1]
+
+batch_sizes:
+  - 1
+  - 8
+
+num_repeats: 1
+warmup_iters: 2
+benchmark_iters: 5
+
+seed: 42
+
+modes:
+  - inference
+
+output_dir: results_cpu/
+
+prometheus_pushgateway: ""

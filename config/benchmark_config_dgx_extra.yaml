@@ -1,0 +1,44 @@
+# DGX2 (NVIDIA GB10) — runs ONLY the 3 workloads that were not benchmarked
+# in the April 3-4 DGX session. resnet50 + bert_base are already in
+# results_dgx2/ and we are not re-running them.
+#
+# Workloads covered here:
+#   - example_mlp           (synthetic MLP, both modes)
+#   - clip_image_embedding  (CLIP-ViT image encoder, inference)
+#   - llm_text_generation   (synthetic GPT decoder, inference)
+
+custom_workloads:
+  example_mlp: "user_workloads.example_mlp:ExampleMLPWorkload"
+  clip_image_embedding: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
+  llm_text_generation: "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+
+workloads:
+  - example_mlp
+  - name: clip_image_embedding
+    target: "user_workloads.clip_image_embedding:ClipImageEmbeddingWorkload"
+    modes: [inference]
+    batch_sizes: [1, 8, 32]
+  - name: llm_text_generation
+    target: "user_workloads.llm_text_generation:LlmTextGenerationWorkload"
+    modes: [inference]
+    batch_sizes: [1, 4, 8]
+
+batch_sizes:
+  - 1
+  - 8
+  - 32
+  - 64
+
+num_repeats: 3
+warmup_iters: 10
+benchmark_iters: 100
+
+seed: 42
+
+modes:
+  - inference
+  - training
+
+output_dir: results_dgx2_extra/
+
+prometheus_pushgateway: ""

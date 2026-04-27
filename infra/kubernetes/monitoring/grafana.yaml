@@ -1,0 +1,154 @@
+# Grafana stack for the ml-benchmark namespace.
+#
+# Auto-provisions:
+#   1. Prometheus as the default datasource (no UI clicks required)
+#   2. The "GPU Benchmark Live" dashboard from a ConfigMap that the deploy
+#      script renders from infra/kubernetes/monitoring/grafana_dashboard.json
+#
+# Access patterns (see infra/docs/k3s-networking-explained.md):
+#   * Inside cluster: http://grafana.ml-benchmark.svc.cluster.local:3000
+#   * From your laptop (recommended for dev):
+#       kubectl port-forward -n ml-benchmark svc/grafana 3000:3000
+#       open http://localhost:3000  (admin / admin)
+#   * From the public internet (smoke runs only):
+#       open http://<controller_public_ip>:30030
+#       — only works because admin_cidrs in terraform.tfvars allowlists you.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: ml-benchmark
+  labels:
+    app: grafana
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        # Cluster-internal DNS for the Prometheus Service we deploy alongside.
+        # k3s/k8s gives every Service a stable DNS name of the form
+        # <svc>.<namespace>.svc.cluster.local — no IP discovery needed.
+        url: http://prometheus.ml-benchmark.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-provider
+  namespace: ml-benchmark
+  labels:
+    app: grafana
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: gpu-benchmark
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: ml-benchmark
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:11.2.0
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            # WARNING: default creds. Change for anything beyond a smoke demo —
+            # set GF_SECURITY_ADMIN_PASSWORD via a Secret in production.
+            - name: GF_SECURITY_ADMIN_USER
+              value: admin
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: admin
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: Viewer
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboards-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-json
+              mountPath: /var/lib/grafana/dashboards
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboards-provider
+          configMap:
+            name: grafana-dashboards-provider
+        - name: dashboard-json
+          configMap:
+            name: grafana-dashboard-json
+        - name: grafana-storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: ml-benchmark
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      # NodePort makes the Service reachable on every cluster node's public IP.
+      # Combined with admin_cidrs in terraform.tfvars, only your IP hits it.
+      nodePort: 30030

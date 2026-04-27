@@ -1,0 +1,99 @@
+name: aws-smoke
+
+# Manual-dispatch AWS smoke test. Runs the smallest possible benchmark on a
+# single T4 GPU (g4dn.xlarge) so PR reviewers can verify the cloud pipeline
+# without paying for a full multi-GPU run.
+#
+# Cost expectation: ~$0.20 per execution (T4 × ~20 minutes including provision,
+# bootstrap, 4-iter benchmark, teardown).
+#
+# Pre-requisites (configure in repo Settings → Secrets and variables → Actions):
+#   - vars.AWS_REGION              e.g. us-east-1
+#   - vars.AWS_ROLE_ARN            OIDC role with permissions for terraform + ec2 + s3
+#   - vars.SMOKE_TFVARS_PATH       e.g. infra/terraform/envs/aws-gpu/terraform.tfvars.smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      gpu_class:
+        description: "GPU class to smoke-test"
+        type: choice
+        default: T4
+        options: [T4, A10G]
+      benchmark_iters:
+        description: "Number of benchmark iterations (keep low for smoke)"
+        default: "4"
+        required: true
+
+permissions:
+  id-token: write   # for AWS OIDC role assumption
+  contents: read
+
+jobs:
+  smoke:
+    name: provision → benchmark → teardown
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      TF_IN_AUTOMATION: "1"
+      TF_INPUT: "0"
+      AWS_REGION: ${{ vars.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.5
+
+      - name: Set smoke benchmark iters
+        run: |
+          sed -i.bak \
+            -e 's/^benchmark_iters: .*/benchmark_iters: ${{ inputs.benchmark_iters }}/' \
+            -e 's/^warmup_iters: .*/warmup_iters: 2/' \
+            -e 's/^num_repeats: .*/num_repeats: 1/' \
+            config/benchmark_config.yaml
+          cat config/benchmark_config.yaml | head -30
+
+      - name: provision
+        working-directory: infra
+        run: ./scripts/run_pipeline.sh provision
+        env:
+          SMOKE_TFVARS: ${{ vars.SMOKE_TFVARS_PATH }}
+
+      - name: bootstrap
+        working-directory: infra
+        run: ./scripts/run_pipeline.sh bootstrap
+
+      - name: deploy
+        working-directory: infra
+        run: ./scripts/run_pipeline.sh deploy
+
+      - name: benchmark (${{ inputs.gpu_class }} only)
+        working-directory: infra
+        run: GPU_CLASSES=${{ inputs.gpu_class }} ./scripts/run_pipeline.sh benchmark
+
+      - name: log-costs
+        working-directory: infra
+        if: always()
+        run: ./scripts/run_pipeline.sh log-costs
+
+      - name: teardown
+        working-directory: infra
+        if: always()
+        run: ./scripts/run_pipeline.sh teardown
+
+      - name: Upload artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results-${{ inputs.gpu_class }}
+          path: |
+            infra/inventory.json
+            results/
+            cost_snapshot.json
+          if-no-files-found: ignore
